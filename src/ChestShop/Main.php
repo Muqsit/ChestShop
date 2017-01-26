@@ -40,7 +40,7 @@ class Main extends PluginBase{
 	protected $shops = [];
 	private $helpcmd = [];
 	private static $instance = null;
-	public $inChestShop = [];
+	public $inChestShop, $clicks = [];
 
 	public function onEnable(){
 		self::$instance = $this;
@@ -71,11 +71,12 @@ class Main extends PluginBase{
 		}
 
 		$shops = yaml_parse_file($this->getDataFolder().'shops.yml');
-		foreach($shops as $key => $val) $this->shops[$key] = $val;
+		if(!empty($shops)) foreach($shops as $key => $val) $this->shops[$key] = $val;
 		$this->helpcmd = [
 			TF::YELLOW.TF::BOLD.'Chest Shop'.TF::RESET,
 			TF::YELLOW.'/{:cmd:} add [price]'.TF::GRAY.' - Add the item in your hand to the chest shop.',
-			TF::YELLOW.'/{:cmd:} remove [page] [slot]'.TF::GRAY.' - Remove an item off the chest shop.'
+			TF::YELLOW.'/{:cmd:} remove [page] [slot]'.TF::GRAY.' - Remove an item off the chest shop.',
+			TF::YELLOW.'/{:cmd:} reload'.TF::GRAY.' - Reload the plugin (to fix errors or refresh data).'
 		];
 		Tile::registerTile(CustomChest::class);
 	}
@@ -105,10 +106,28 @@ class Main extends PluginBase{
 		$block->y = floor($tile->y);
 		$block->z = floor($tile->z);
 		$block->level = $tile->getLevel();
-		$block->level->sendBlocks([$player],[$block]);
+		$block->level->sendBlocks([$player], [$block]);
 		$inventory = $tile->getInventory();
 		$this->fillInventoryWithShop($inventory);
 		$player->addWindow($inventory);
+	}
+
+	public function reload(){
+		$this->onDisable();
+		$this->shops = [];
+		$shops = yaml_parse_file($this->getDataFolder().'shops.yml');
+		if(!empty($shops)) foreach($shops as $key => $val) $this->shops[$key] = $val;
+	}
+
+	public function getItemFromShop(int $id) : Item{
+		$data = $this->shops[$id] ?? null;
+		$item = null;
+		if(is_array($data)){
+			$item = Item::get($data[0], $data[1], $data[2]);
+			$item->setNamedTag(unserialize($data[3]));
+			unset($item->getNamedTag()->ChestShop);
+		}
+		return $item ?? Item::get(0);
 	}
 
 	public function fillInventoryWithShop($inventory, $page = 0){
@@ -120,6 +139,7 @@ class Main extends PluginBase{
 				$item = Item::get($data[0], $data[1], $data[2]);
 				if($data[3] === null) break;
 				$item->setNamedTag(unserialize($data[3]));
+				$item->setCustomName(TF::RESET.TF::YELLOW.'Tap again to purchase for $'.$item->getNamedTag()->ChestShop->getValue()[0].TF::RESET."\n".' '."\n".$item->getName());
 				$inventory->addItem($item);
 			}
 		}
@@ -142,11 +162,20 @@ class Main extends PluginBase{
 	}
 
 	public function addToChestShop(Item $item, int $price){
+		$key = rand();
 		$nbt = $item->getNamedTag() !== null ? serialize($item->getNamedTag()) : null;
 		$nbt = $item->getNamedTag() ?? new CompoundTag("", []);
-		$nbt->ChestShop = new IntTag('ChestShop', $price);
+		$nbt->ChestShop = new IntArrayTag ('ChestShop', [$price, $key]);
+		$nbt->CSKey = $key;
 		$item->setNamedTag($nbt);
-		$this->shops[] = [$item->getId(), $item->getDamage(), $item->getCount(), $nbt];
+		$this->shops[$key] = [$item->getId(), $item->getDamage(), $item->getCount(), $nbt];
+	}
+
+	public function removeItemOffShop(int $page, int $slot){
+		if(empty($this->shops)) return;
+		$keys = array_keys($this->shops);//$shops is an associative array.
+		$key = (24*$page) + $slot;//array_chunks divides $shops into 24 parts in the GUI. Hope PHP follows BODMAS.
+		unset($this->shops[$keys[--$key]]);//$slot - 1. Slots are counted from 0. If $slot is 1, the issuer probably (actually) is referring to slot zero.
 	}
 
 	public function onCommand(CommandSender $sender, Command $cmd, $label, array $args){
@@ -166,7 +195,22 @@ class Main extends PluginBase{
 							if(isset($args[1]) && is_numeric($args[1]) && $args[1] >= 0) $this->addToChestShop($item, $args[1]);
 							else $sender->sendMessage(TF::RED.'Please enter a valid number.');
 						}
-					}
+					}    
+					break;
+				case "remove":
+					if($sender->hasPermission('chestshop.command.remove')){
+						if(isset($args[1], $args[2]) && is_numeric($args[1]) && is_numeric($args[2]) && ($args[1] >= 0) && ($args[2] >= 1)){
+							$sender->sendMessage(self::PREFIX.TF::YELLOW.'Removed item on page #'.$args[1].', slot #'.$args[2].'.');
+							$this->removeItemOffShop($args[1], $args[2]);
+						} else $sender->sendMessage(TF::RED.'Page number and item slot must be integers (page > -1, slot > 0).');
+					}    
+					break;
+				case "reload":
+					if($sender->hasPermission('chestshop.command.reload')){
+						$sender->sendMessage(self::PREFIX.TF::AQUA.'ChestShop is reloading...');
+						$this->reload();
+						$sender->sendMessage(self::PREFIX.TF::AQUA.'ChestShop has reloaded successfully.');
+					}    
 					break;
 				default:
 					$sender->sendMessage(TF::RED.'Type /cs help to get a list of chest shop help commands.');

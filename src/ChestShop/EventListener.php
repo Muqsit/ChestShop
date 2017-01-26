@@ -23,22 +23,36 @@
 */
 namespace ChestShop;
 
-use ChestShop\Chest\CustomChestInventory;
+use ChestShop\Chest\{CustomChest, CustomChestInventory};
 use onebone\economyapi\EconomyAPI;
-use pocketmine\event\Listener;
+use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\inventory\InventoryTransactionEvent;
-use pocketmine\Player;
-use pocketmine\inventory\ChestInventory;
-use pocketmine\utils\TextFormat as TF;
+use pocketmine\event\Listener;
 use pocketmine\item\Item;
+use pocketmine\Player;
+use pocketmine\utils\TextFormat as TF;
 
 class EventListener implements Listener{
 
 	protected $plugin;
+
 	public function __construct(Main $plugin){
 		$this->plugin = $plugin;
 	}
 
+	/**
+	* Prevents duplication of GUI items.
+	* Doesn't allow block breaking if there
+	* is a Chest Shop tile where the block is.
+	*/
+	public function onBreak(BlockBreakEvent $event){
+		$event->setCancelled($event->getBlock()->getLevel()->getTile($event->getBlock()) instanceof CustomChest);
+	}
+
+	/**
+	* This is where all the chest shop
+	* transaction are handled.
+	*/
 	public function onTransaction(InventoryTransactionEvent $event){
 		$transactions = $event->getTransaction()->getTransactions();
 
@@ -51,14 +65,15 @@ class EventListener implements Listener{
 					if($assumed instanceof Player) {
 						$player = $assumed;
 						$chestinv = $inv;
+						break;
 					}
 			}
 			$action = $transaction;
 		}
 		if($chestinv === null) return;
+		$event->setCancelled();
 
 		$item = $action->getTargetItem();
-		$event->setCancelled();
 
 		if(isset($item->getNamedTag()->turner)){
 			$action = $item->getNamedTag()->turner->getValue();
@@ -67,13 +82,19 @@ class EventListener implements Listener{
 			return;
 		}
 
-		$data = $item->getNamedTag()->ChestShop->getValue();
-		$price = $data ?? 0;
+		$data = $item->getNamedTag()->ChestShop->getValue() ?? null;
+		if($data === null) return;
+		$price = $data[0] ?? 15000;
+		if(!isset($this->plugin->clicks[$player->getId()][$data[1]])){
+				$this->plugin->clicks[$player->getId()][$data[1]] = 1;
+				return;
+		}
 		if(EconomyAPI::getInstance()->myMoney($player) >= $price){
+	 	 	$item = $this->plugin->getItemFromShop($data[1]);
 			$player->sendMessage(Main::PREFIX.TF::GREEN.'Purchased '.TF::BOLD.$item->getName().TF::RESET.TF::GREEN.TF::GRAY.' (x'.$item->getCount().')'.TF::GREEN.' for $'.$price);
-			unset($item->getNamedTag()->ChestShop);
-			if (!isset($item->getNamedTag()->ChestShop)) $player->getInventory()->addItem($item);
+			$player->getInventory()->addItem($item);
 			EconomyAPI::getInstance()->reduceMoney($player, $price);
+			unset($this->plugin->clicks[$player->getId()]);
 		}else{
 			$player->sendMessage(Main::PREFIX.TF::RED.'You cannot afford this item.');
 			$chestinv->onClose($player);

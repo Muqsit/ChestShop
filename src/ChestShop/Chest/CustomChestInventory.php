@@ -22,9 +22,9 @@
 *
 */
 namespace ChestShop\Chest;
-
 use pocketmine\inventory\InventoryType;
 use pocketmine\Player;
+use pocketmine\block\Block;
 
 class CustomChestInventory extends \pocketmine\inventory\ChestInventory{
 
@@ -37,8 +37,15 @@ class CustomChestInventory extends \pocketmine\inventory\ChestInventory{
 	}
 
 	public function onClose(Player $who){
+		$pos = $this->holder;//not really "pos".. but our usage definitely makes it a pos.
+		$block = $pos->getReplacement();
+		$block->x = floor($pos->x);
+		$block->y = floor($pos->y);
+		$block->z = floor($pos->z);
+		$block->level = $pos->getLevel();
+		$block->level->sendBlocks([$who], [$block]);
 		parent::onClose($who);
-		$this->holder->getLevel()->setBlock($this->holder, $this->holder->getReplacement());
+		unset(\ChestShop\Main::getInstance()->clicks[$who->getId()]);
 		$this->holder->close();
 	}
 }

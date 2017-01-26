@@ -6,3 +6,8 @@ depend: [EconomyAPI]
 commands:
   chestshop:
     aliases: ["cs", "cshop"]
+permissions:
+  chestshop.command.add:
+    default: op
+  chestshop.command.remove:
+    default: op
