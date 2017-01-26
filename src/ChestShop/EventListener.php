@@ -86,8 +86,8 @@ class EventListener implements Listener{
 		if($data === null) return;
 		$price = $data[0] ?? 15000;
 		if(!isset($this->plugin->clicks[$player->getId()][$data[1]])){
-				$this->plugin->clicks[$player->getId()][$data[1]] = 1;
-				return;
+			$this->plugin->clicks[$player->getId()][$data[1]] = 1;
+			return;
 		}
 		if(EconomyAPI::getInstance()->myMoney($player) >= $price){
 	 	 	$item = $this->plugin->getItemFromShop($data[1]);
