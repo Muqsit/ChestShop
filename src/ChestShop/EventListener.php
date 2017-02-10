@@ -34,6 +34,7 @@ use pocketmine\utils\TextFormat as TF;
 
 class EventListener implements Listener{
 
+	const DEFAULT_PRICE = 15000;
 	protected $plugin;
 
 	public function __construct(Main $plugin){
@@ -61,18 +62,19 @@ class EventListener implements Listener{
 		$action = null;
 		foreach($transactions as $transaction){
 			if(($inv = $transaction->getInventory()) instanceof CustomChestInventory){
-				foreach($inv->getViewers() as $assumed)
-					if($assumed instanceof Player) {
+				foreach($inv->getViewers() as $assumed){
+					if($assumed instanceof Player){
 						$player = $assumed;
 						$chestinv = $inv;
+						$action = $transaction;
 						break;
 					}
+				}
 			}
-			$action = $transaction;
 		}
+		
 		if($chestinv === null) return;
 		$event->setCancelled();
-
 		$item = $action->getTargetItem();
 
 		if(isset($item->getNamedTag()->turner)){
@@ -84,7 +86,7 @@ class EventListener implements Listener{
 
 		$data = $item->getNamedTag()->ChestShop->getValue() ?? null;
 		if($data === null) return;
-		$price = $data[0] ?? 15000;
+		$price = $data[0] ?? self::DEFAULT_PRICE;
 		if(!isset($this->plugin->clicks[$player->getId()][$data[1]])){
 			$this->plugin->clicks[$player->getId()][$data[1]] = 1;
 			return;
