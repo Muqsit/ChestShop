@@ -1,7 +1,7 @@
 name: ChestShop
 main: ChestShop\Main
-api: [2.0.0, 3.0.0]
-version: 1.0.0
+api: [2.0.0, 3.0.0, 3.0.0-ALPHA3]
+version: 2.0
 depend: [EconomyAPI]
 commands:
   chestshop:

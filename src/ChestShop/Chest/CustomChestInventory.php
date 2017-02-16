@@ -43,7 +43,7 @@ class CustomChestInventory extends \pocketmine\inventory\ChestInventory{
 		$block->y = floor($pos->y);
 		$block->z = floor($pos->z);
 		$block->level = $pos->getLevel();
-		$block->level->sendBlocks([$who], [$block]);
+		if($who instanceof Player) $block->level->sendBlocks([$who], [$block]);
 		parent::onClose($who);
 		unset(\ChestShop\Main::getInstance()->clicks[$who->getId()]);
 		$this->holder->close();

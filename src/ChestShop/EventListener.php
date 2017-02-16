@@ -34,7 +34,6 @@ use pocketmine\utils\TextFormat as TF;
 
 class EventListener implements Listener{
 
-	const DEFAULT_PRICE = 15000;
 	protected $plugin;
 
 	public function __construct(Main $plugin){
@@ -47,7 +46,7 @@ class EventListener implements Listener{
 	* is a Chest Shop tile where the block is.
 	*/
 	public function onBreak(BlockBreakEvent $event){
-		$event->setCancelled($event->getBlock()->getLevel()->getTile($event->getBlock()) instanceof CustomChest);
+		if($event->getBlock()->getLevel()->getTile($event->getBlock()) instanceof CustomChest) $event->setCancelled();
 	}
 
 	/**
@@ -67,15 +66,19 @@ class EventListener implements Listener{
 						$player = $assumed;
 						$chestinv = $inv;
 						$action = $transaction;
-						break;
+						break 2;
 					}
 				}
 			}
 		}
-		
-		if($chestinv === null) return;
+
+		/*
+		* $player => Player interacting with the GUI.
+		* $chestinv => The chest's inventory.
+		* $action => BaseTransaction|Transaction|SimpleTransactionGroup
+		*/
 		$event->setCancelled();
-		$item = $action->getTargetItem();
+		$item = ($item = $action->getTargetItem())->getId() === 0 ? $action->getSourceItem() : $item;
 
 		if(isset($item->getNamedTag()->turner)){
 			$action = $item->getNamedTag()->turner->getValue();
@@ -84,16 +87,18 @@ class EventListener implements Listener{
 			return;
 		}
 
-		$data = $item->getNamedTag()->ChestShop->getValue() ?? null;
+		$data = isset($item->getNamedTag()->ChestShop) ? $item->getNamedTag()->ChestShop->getValue() : null;
 		if($data === null) return;
-		$price = $data[0] ?? self::DEFAULT_PRICE;
+
+		$price = $data[0] ?? $this->plugin->defaultprice;
 		if(!isset($this->plugin->clicks[$player->getId()][$data[1]])){
 			$this->plugin->clicks[$player->getId()][$data[1]] = 1;
 			return;
 		}
+
 		if(EconomyAPI::getInstance()->myMoney($player) >= $price){
 	 	 	$item = $this->plugin->getItemFromShop($data[1]);
-			$player->sendMessage(Main::PREFIX.TF::GREEN.'Purchased '.TF::BOLD.$item->getName().TF::RESET.TF::GREEN.TF::GRAY.' (x'.$item->getCount().')'.TF::GREEN.' for $'.$price);
+			$player->sendMessage(Main::PREFIX.TF::GREEN.'Purchased '.TF::BOLD.$item->getName().TF::RESET.TF::GREEN.TF::GRAY.' (x'.$item->getCount().')'.TF::GREEN.' for $'.$price.'.');
 			$player->getInventory()->addItem($item);
 			EconomyAPI::getInstance()->reduceMoney($player, $price);
 			unset($this->plugin->clicks[$player->getId()]);

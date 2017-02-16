@@ -35,6 +35,7 @@ class CustomChest extends \pocketmine\tile\Chest{
 	}
 
 	public function getReplacement() : Block{
-		return Block::get($this->namedtag->replace->getValue() ?? 0);
+		$replace = $this->namedtag->replace->getValue() ?? [0, 0];
+		return Block::get($replace[0], $replace[1]);
 	}
 }
