@@ -17,4 +17,4 @@ Commands:
 - /cs reload - Reloads the plugin (use this if you experience issues).
 - /cs help - List all commands with their descriptions.
 
-Thats it. There's one small error with unserialization of NBT tags. Basically, after you are done with /cs add [price], and you test-check the items by doing /cs, you will get "An unknown error occurred" message. To fix this, either restart the server or use /cs reload.
+Thats it. Dont forget to star the repository.
