@@ -1,5 +1,5 @@
 # ChestShop
-ChestShop for PocketMine-MP (pmmp) by me of course.
+ChestShop for PocketMine-MP (pmmp) by Muqsit. Note that you must have **EconomyAPI** installed before running the plugin, else the plugin wont enable.
 Chest shop allows you to create Chest GUI based shops - a widely used feature in minigames such as MoneyWars, SkyBlock and SkyWars.
 
 Features:
@@ -13,6 +13,7 @@ Commands:
 - /cs - Opens the ChestShop. (Permission: Everyone)
 - /cs add [price] - Add the item in your hand to the ChestShop. (Permission: OP)
 - /cs remove [page] [slot] - Remove item from a specific page and slot. (Permission: OP)
+- /cs removebyid [itemid] [itemdamage] - Remove items with id [itemid] and damage [itemdamage] off ChestShop. (Permission: OP)
 - /cs reload - Reloads the plugin (use this if you experience issues).
 - /cs help - List all commands with their descriptions.
 
