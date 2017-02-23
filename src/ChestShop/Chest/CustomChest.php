@@ -23,14 +23,14 @@
 */
 namespace ChestShop\Chest;
 
-use pocketmine\level\format\Chunk;
-use pocketmine\nbt\tag\{CompoundTag, IntTag};
 use pocketmine\block\Block;
+use pocketmine\level\Level;
+use pocketmine\nbt\tag\{CompoundTag, IntTag};
 
 class CustomChest extends \pocketmine\tile\Chest{
 
-	public function __construct(Chunk $chunk, CompoundTag $nbt){
-		parent::__construct($chunk, $nbt);
+	public function __construct(Level $level, CompoundTag $nbt){
+		parent::__construct($level, $nbt);
 		$this->inventory = new CustomChestInventory($this);
 	}
 
