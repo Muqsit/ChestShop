@@ -106,7 +106,7 @@ class Main extends PluginBase{
 			new IntTag('z', floor($player->z))
 		]);
 		/** @var Chest $tile */
-		$tile = Tile::createTile('CustomChest', $player->chunk, $nbt);
+		$tile = Tile::createTile('CustomChest', $player->getLevel(), $nbt);
 		$tile->namedtag->replace = new IntArrayTag("replace", [$tile->getBlock()->getId(), $tile->getBlock()->getDamage()]);
 		$block = Block::get(Block::CHEST);
 		$block->x = floor($tile->x);
