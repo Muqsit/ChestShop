@@ -78,6 +78,10 @@ class EventListener implements Listener{
 		* $action => BaseTransaction|Transaction|SimpleTransactionGroup
 		*/
 		$event->setCancelled();
+		if($action == null) { // I hate errors spamming in the console
+			return true;
+		}
+
 		$item = ($item = $action->getTargetItem())->getId() === 0 ? $action->getSourceItem() : $item;
 
 		if(isset($item->getNamedTag()->turner)){
