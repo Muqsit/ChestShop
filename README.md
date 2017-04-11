@@ -1,7 +1,7 @@
 # ChestShop
 ChestShop for PocketMine-MP (pmmp) by Muqsit. Note that you must have **EconomyAPI** installed before running the plugin, else the plugin wont enable.
 Chest shop allows you to create Chest GUI based shops - a widely used feature in minigames such as MoneyWars, SkyBlock and SkyWars.
-
+If you are looking for a compressed .phar file, go here:https://github.com/Muqsit/ChestShop/releases
 Features:
 - Ability to add enchanted, custom named, custom NBT tagged items.
 - Everything can be managed in-game on run time. No config modification needed.
