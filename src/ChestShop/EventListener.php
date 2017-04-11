@@ -25,6 +25,7 @@ namespace ChestShop;
 
 use ChestShop\Chest\{CustomChest, CustomChestInventory};
 use onebone\economyapi\EconomyAPI;
+
 use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\inventory\InventoryTransactionEvent;
 use pocketmine\event\Listener;
@@ -72,23 +73,32 @@ class EventListener implements Listener{
 			}
 		}
 
+		if(($player ?? $chestinv ?? $action) === null){
+			return;
+		}
+
 		/*
 		* $player => Player interacting with the GUI.
 		* $chestinv => The chest's inventory.
 		* $action => BaseTransaction|Transaction|SimpleTransactionGroup
 		*/
 		$event->setCancelled();
-		$item = ($item = $action->getTargetItem())->getId() === 0 ? $action->getSourceItem() : $item;
+		$item = $action->getSourceItem();
+		if($item->getId() === Item::AIR){
+			return;
+		}
 
 		if(isset($item->getNamedTag()->turner)){
-			$action = $item->getNamedTag()->turner->getValue();
-			$page = $action[0] === 0 ? --$action[1] : ++$action[1];
+			$pagedata = $item->getNamedTag()->turner->getValue();
+			$page = $pagedata[0] === 0 ? --$pagedata[1] : ++$pagedata[1];
 			$this->plugin->fillInventoryWithShop($chestinv, $page);
 			return;
 		}
 
 		$data = isset($item->getNamedTag()->ChestShop) ? $item->getNamedTag()->ChestShop->getValue() : null;
-		if($data === null) return;
+		if($data === null){
+			return;
+		}
 
 		$price = $data[0] ?? $this->plugin->defaultprice;
 		if(!isset($this->plugin->clicks[$player->getId()][$data[1]])){

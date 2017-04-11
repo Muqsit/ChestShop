@@ -1,12 +1,14 @@
 name: ChestShop
 main: ChestShop\Main
-api: [2.0.0, 3.0.0, 3.0.0-ALPHA4]
-version: 2.0
+api: [2.0.0, 3.0.0, 3.0.0-ALPHA4, 3.0.0-ALPHA5, 3.0.0-ALPHA6]
+version: 3.0
 depend: [EconomyAPI]
 commands:
   chestshop:
     aliases: ["cs", "cshop"]
 permissions:
+  chestshop.command.opcmd:
+    default: op
   chestshop.command.add:
     default: op
   chestshop.command.remove:

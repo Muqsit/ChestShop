@@ -37,13 +37,7 @@ class CustomChestInventory extends \pocketmine\inventory\ChestInventory{
 	}
 
 	public function onClose(Player $who){
-		$pos = $this->holder;//not really "pos".. but our usage definitely makes it a pos.
-		$block = $pos->getReplacement();
-		$block->x = floor($pos->x);
-		$block->y = floor($pos->y);
-		$block->z = floor($pos->z);
-		$block->level = $pos->getLevel();
-		if($who instanceof Player) $block->level->sendBlocks([$who], [$block]);
+		$this->holder->sendReplacement($who);
 		parent::onClose($who);
 		unset(\ChestShop\Main::getInstance()->clicks[$who->getId()]);
 		$this->holder->close();
