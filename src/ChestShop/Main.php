@@ -139,19 +139,18 @@ class Main extends PluginBase{
 	* @param Player $player
 	*/
 	public function sendChestShop(Player $player){
-		$nbt = new CompoundTag('', [
+		/** @var Chest $tile */
+		$tile = Tile::createTile('CustomChest', $player->getLevel(), new CompoundTag('', [
 			new StringTag('id', Tile::CHEST),
 			new IntTag('ChestShop', 1),
 			new IntTag('x', floor($player->x)),
 			new IntTag('y', floor($player->y) - 4),
 			new IntTag('z', floor($player->z))
-		]);
-		/** @var Chest $tile */
-		$tile = Tile::createTile('CustomChest', $player->getLevel(), $nbt);
+		]));
 		$block = Block::get(Block::CHEST);
-		$block->x = floor($tile->x);
-		$block->y = floor($tile->y);
-		$block->z = floor($tile->z);
+		$block->x = $tile->x;
+		$block->y = $tile->y;
+		$block->z = $tile->z;
 		$block->level = $tile->getLevel();
 		$block->level->sendBlocks([$player], [$block]);
 		$this->fillInventoryWithShop($inventory = $tile->getInventory());
