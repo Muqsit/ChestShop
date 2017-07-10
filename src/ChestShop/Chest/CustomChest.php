@@ -48,9 +48,9 @@ class CustomChest extends \pocketmine\tile\Chest{
 
 	public function sendReplacement(Player $player){
 		$block = $this->getReplacement();
-		$block->x = floor($this->x);
-		$block->y = floor($this->y);
-		$block->z = floor($this->z);
+		$block->x = $this->x;
+		$block->y = $this->y;
+		$block->z = $this->z;
 		$block->level = $this->getLevel();
 		if($block->level !== null){
 			$block->level->sendBlocks([$player], [$block]);
