@@ -64,4 +64,8 @@ class CustomChest extends \pocketmine\tile\Chest{
 	public function spawnToAll(){
 		//needless
 	}
+	
+	public function saveNBT(){
+		//needless
+	}
 }
