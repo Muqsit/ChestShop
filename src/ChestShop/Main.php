@@ -49,18 +49,41 @@ class Main extends PluginBase{
 		]
 	];
 
+	const HELP_CMD = [
+		TF::YELLOW.TF::BOLD.'Chest Shop'.TF::RESET,
+		TF::YELLOW.'/{:cmd:} add [price]'.TF::GRAY.' - Add the item in your hand to the chest shop.',
+		TF::YELLOW.'/{:cmd:} remove [page] [slot]'.TF::GRAY.' - Remove an item off the chest shop.',
+		TF::YELLOW.'/{:cmd:} reload'.TF::GRAY.' - Reload the plugin (to fix errors or refresh data).'
+	];
+
+	const LEFT_TURNER = 0;
+	const RIGHT_TURNER = 1;
+
+	const NBT_TURNER_DIRECTION = 0;
+	const NBT_TURNER_CURRENTPAGE = 1;
+
+	const NBT_CHESTSHOP_PRICE = 0;
+	const NBT_CHESTSHOP_ID = 1;
+
+	/** @var int */
 	public $defaultprice;
-	public $inChestShop, $clicks = [];
+
+	/** @var Item[] */
 	protected $shops = [];
-	private $helpcmd = [];
-	private static $instance = null;
+
+	/** @var Main */
+	private static $instance;
+
+	/** @var int[] */
 	private $notallowed = [];
+
+	/** @var bool */
 	private $economyshop = false;
 
-	public function onEnable(){
+	public function onEnable() : void{
 		self::$instance = $this;
 		$this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
-		$info = [
+		$this->getLogger()->notice(implode("\n", [
 			" ",
 			" _____ _               _   _____ _                 ",
 			"/  __ \ |             | | /  ___| |                ",
@@ -73,27 +96,25 @@ class Main extends PluginBase{
 			" ",
 			"@author Muqsit Rayyan",
 			" "
-		];
-		$this->getLogger()->notice(implode("\n", $info));
+		]));
 
-		if(!is_dir($this->getDataFolder())) mkdir($this->getDataFolder());
+		if(!is_dir($this->getDataFolder())){
+			mkdir($this->getDataFolder());
+		}
+
 		foreach(array_keys(self::CONFIG) as $file){
 			$this->updateConfig($file);
 		}
 
 		$shops = yaml_parse_file($this->getDataFolder().'shops.yml');
-		if(!empty($shops)) foreach($shops as $key => $val) $this->shops[$key] = $val;
-		
+		if(!empty($shops)){
+			$this->shops = $shops;
+		}
+
 		$config = yaml_parse_file($this->getDataFolder().'config.yml');
 		$this->defaultprice = $config["default-price"] ?? 15000;
 		$this->notallowed = array_flip($config["banned-items"] ?? []);
 
-		$this->helpcmd = [
-			TF::YELLOW.TF::BOLD.'Chest Shop'.TF::RESET,
-			TF::YELLOW.'/{:cmd:} add [price]'.TF::GRAY.' - Add the item in your hand to the chest shop.',
-			TF::YELLOW.'/{:cmd:} remove [page] [slot]'.TF::GRAY.' - Remove an item off the chest shop.',
-			TF::YELLOW.'/{:cmd:} reload'.TF::GRAY.' - Reload the plugin (to fix errors or refresh data).'
-		];
 		Tile::registerTile(CustomChest::class);
 
 		if($config['enable-sync'] == true){
@@ -106,18 +127,18 @@ class Main extends PluginBase{
 	/**
 	* @return Main
 	*/
-	public static function getInstance(){
+	public static function getInstance() : Main{
 		return self::$instance;
 	}
 
-	public function onDisable(){
+	public function onDisable() : void{
 		yaml_emit_file($this->getDataFolder().'shops.yml', $this->shops);
 	}
 
 	/**
 	* Updates config with newer data.
 	*/
-	private function updateConfig(string $config){
+	private function updateConfig(string $config) : void{
 		if(isset(self::CONFIG[$config])){
 			$data = [];
 			if(is_file($path = $this->getDataFolder().$config)){
@@ -138,30 +159,28 @@ class Main extends PluginBase{
 	*
 	* @param Player $player
 	*/
-	public function sendChestShop(Player $player){
+	public function sendChestShop(Player $player) : void{
 		/** @var Chest $tile */
-		$tile = Tile::createTile('CustomChest', $player->getLevel(), new CompoundTag('', [
+		$tile = Tile::createTile('CustomChest', $player->getLevel(), new CompoundTag("", [
 			new StringTag('id', Tile::CHEST),
 			new IntTag('ChestShop', 1),
 			new IntTag('x', floor($player->x)),
 			new IntTag('y', floor($player->y) - 4),
 			new IntTag('z', floor($player->z))
 		]));
-		$block = Block::get(Block::CHEST);
-		$block->x = $tile->x;
-		$block->y = $tile->y;
-		$block->z = $tile->z;
-		$block->level = $tile->getLevel();
+		$block = Block::get(Block::CHEST, 0, $tile);
 		$block->level->sendBlocks([$player], [$block]);
 		$this->fillInventoryWithShop($inventory = $tile->getInventory());
 		$player->addWindow($inventory);
 	}
 
-	public function reload(){
+	public function reload() : void{
 		$this->onDisable();
 		$this->shops = [];
 		$shops = yaml_parse_file($this->getDataFolder().'shops.yml');
-		if(!empty($shops)) foreach($shops as $key => $val) $this->shops[$key] = $val;
+		if(!empty($shops)){
+			$this->shops = $shops;
+		}
 		$config = yaml_parse_file($this->getDataFolder().'config.yml');
 		$this->defaultprice = $config["default-price"] ?? 15000;
 		$this->notallowed = array_flip($config["banned-items"] ?? []);
@@ -173,15 +192,12 @@ class Main extends PluginBase{
 	* @param int $id
 	* @return Item
 	*/
-	public function getItemFromShop(int $id): Item {
-		$data = $this->shops[$id] ?? null;
-		$item = null;
-		if($data !== null){
-			$item = Item::get($data[0], $data[1], $data[2]);
-			$item->setNamedTag(unserialize($data[3]));
-			unset($item->getNamedTag()->ChestShop);
+	public function getItemFromShop(int $id): Item{
+		if(isset($this->shops[$id])){
+			$data = $this->shops[$id];
+			return Item::get($data[0], $data[1], $data[2])->setNamedTag(unserialize($data[3]));
 		}
-		return $item ?? Item::get(0);
+		return Item::get(Item::AIR, 0, 0);
 	}
 
 	/**
@@ -191,8 +207,8 @@ class Main extends PluginBase{
 	* @param ChestInventory $inventory
 	* @param int $page
 	*/
-	public function fillInventoryWithShop(CustomChestInventory $inventory, int $page = 0){
-		$inventory->clearAll();
+	public function fillInventoryWithShop(CustomChestInventory $inventory, int $page = 0) : void{
+		$contents = [];
 		if(!empty($this->shops)) {
 			$chunked = array_chunk($this->shops, 24, true);
 			if($page < 0){
@@ -201,29 +217,28 @@ class Main extends PluginBase{
 			$page = isset($chunked[$page]) ? $page : 0;
 			foreach($chunked[$page] as $data){
 				$item = Item::get($data[0], $data[1], $data[2]);
-				if($data[3] === null) break;
-				$item->setNamedTag(unserialize($data[3]));
-				$item->setCustomName(TF::RESET.$item->getName()."\n \n".TF::YELLOW.'Double-tap to purchase for $'.$item->getNamedTag()->ChestShop->getValue()[0].TF::RESET);
-				$inventory->addItem($item);
+				if($data[3] === null){
+					break;
+				}
+
+				$item->setNamedTag($nbt = unserialize($data[3]));
+				$item->setCustomName(TF::RESET.$item->getName()."\n \n".TF::YELLOW.'Tap to purchase for '.TF::BOLD.'$'.$nbt->ChestShop->getValue()[0].TF::RESET);
+				$contents[] = $item;
 			}
 		}
 
 		// Page turners.
 		$turnleft = Item::get(Item::PAPER);
-		$turnright = Item::get(Item::PAPER);
 		$turnleft->setCustomName(TF::RESET.TF::GOLD.TF::BOLD.'<< Turn Left'.TF::RESET."\n".TF::GRAY.'Turn towards the left.');
+		$turnleft->setNamedTagEntry(new IntArrayTag('turner', [self::LEFT_TURNER, $page]));
+		$contents[25] = $turnleft;
+
+		$turnright = Item::get(Item::PAPER);
 		$turnright->setCustomName(TF::RESET.TF::GOLD.TF::BOLD.'Turn Right >>'.TF::RESET."\n".TF::GRAY.'Turn towards the right.');
+		$turnright->setNamedTagEntry(new IntArrayTag('turner', [self::RIGHT_TURNER, $page]));
+		$contents[26] = $turnright;
 
-		$nbtleft = $turnleft->getNamedTag();
-		$nbtleft->turner = new IntArrayTag('turner', [0, $page]);
-		$turnleft->setNamedTag($nbtleft);
-
-		$nbtright = $turnright->getNamedTag();
-		$nbtright->turner = new IntArrayTag('turner', [1, $page]);
-		$turnright->setNamedTag($nbtright);
-
-		$inventory->setItem(25, $turnleft);
-		$inventory->setItem(26, $turnright);
+		$inventory->setContents($contents);
 	}
 
 	/**
@@ -232,18 +247,10 @@ class Main extends PluginBase{
 	* @param Item $item
 	* @param int $price
 	*/
-	public function addToChestShop(Item $item, int $price){
-		$key = rand();
-		if(isset($this->shops[$key])){
-			while(isset($this->shops[$key])){
-				$key = rand();
-			}
-		}
-		$nbt = $item->getNamedTag() ?? new CompoundTag("", []);
-		$nbt->ChestShop = new IntArrayTag('ChestShop', [$price, $key]);
-		$nbt->CSKey = $key;
-		$item->setNamedTag($nbt);
-		$this->shops[$key] = [$item->getId(), $item->getDamage(), $item->getCount(), serialize($nbt)];
+	public function addToChestShop(Item $item, int $price) : void{
+		while(isset($this->shops[$key = rand()]));
+		$item->setNamedTagEntry(new IntArrayTag('ChestShop', [$price, $key]));
+		$this->shops[$key] = [$item->getId(), $item->getDamage(), $item->getCount(), serialize($item->getNamedTag())];
 	}
 
 	/**
@@ -252,10 +259,12 @@ class Main extends PluginBase{
 	* @param int $page
 	* @param int $slot
 	*/
-	public function removeItemOffShop(int $page, int $slot){
-		if(empty($this->shops)) return;
+	public function removeItemOffShop(int $page, int $slot) : void{
+		if(empty($this->shops)){
+			return;
+		}
 		$keys = array_keys($this->shops);//$this->shops is an associative array.
-		$key = (24*$page) + $slot;//array_chunks divides $shops into 24 parts in the GUI.
+		$key = 24 * $page + $slot;//array_chunks divides $shops into 24 parts in the GUI.
 		unset($this->shops[$keys[--$key]]);//$slot - 1. Slots are counted from 0. If $slot is 1, the issuer probably (actually) is referring to slot zero.
 	}
 
@@ -282,17 +291,17 @@ class Main extends PluginBase{
 	*
 	* @param int|array $keys
 	*/
-	public function removeItemsByKey($keys){
+	public function removeItemsByKey($keys) : void{
 		foreach((array)$keys as $key){
 			unset($this->shops[$key]);
 		}
 	}
 
-	public function onCommand(CommandSender $sender, Command $cmd, $label, array $args){
+	public function onCommand(CommandSender $sender, Command $cmd, $label, array $args) : bool{
 		if(isset($args[0])){
 			switch(strtolower($args[0])){
 				case "help":
-					$sender->sendMessage(str_replace('{:cmd:}', $cmd, implode("\n", $this->helpcmd)));
+					$sender->sendMessage(str_replace('{:cmd:}', $cmd, implode("\n", self::HELP_CMD)));
 					break;
 				case "about":
 					$sender->sendMessage(TF::YELLOW.TF::BOLD.'ChestShop'.TF::RESET."\n".TF::GRAY.'Created by Muqsit ('.TF::AQUA.'@muqsitrayyan'.TF::GRAY.').');
@@ -300,13 +309,17 @@ class Main extends PluginBase{
 				case "add":
 					if($sender->hasPermission('chestshop.command.add')){
 						$item = $sender->getInventory()->getItemInHand();
-						if($item->getId() === 0) $sender->sendMessage(self::PREFIX.TF::RED.'Please hold an item in your hand.');
-						elseif($this->isNotAllowed($item->getId(), $item->getDamage())) $sender->sendMessage(self::PREFIX.TF::RED.'You cannot sell '.((Item::get($item->getId(), $item->getDamage()))->getName()).' on /chestshop.');
-						else{
+						if($item->isNull()){
+							$sender->sendMessage(self::PREFIX.TF::RED.'Please hold an item in your hand.');
+						}elseif($this->isNotAllowed($item->getId(), $item->getDamage())){
+							$sender->sendMessage(self::PREFIX.TF::RED.'You cannot sell '.((Item::get($item->getId(), $item->getDamage()))->getName()).' on /chestshop.');
+						}else{
 							if(isset($args[1]) && is_numeric($args[1]) && $args[1] >= 0) {
 								$sender->sendMessage(self::PREFIX.TF::YELLOW.'Added '.(explode("\n", $item->getName())[0]).' to '.$cmd->getName().' for $'.$args[1].'.');
 								$this->addToChestShop($item, $args[1]);
-							}else $sender->sendMessage(TF::RED.'Please enter a valid number.');
+							}else{
+								$sender->sendMessage(TF::RED.'Please enter a valid number.');
+							}
 						}
 					}    
 					break;
@@ -323,8 +336,12 @@ class Main extends PluginBase{
 									}
 								}
 								$sender->sendMessage(self::PREFIX.TF::YELLOW.$i.' items were removed off auction house (ID: '.$args[1].', DAMAGE: '.$damage.').');
-							}else $this->getServer()->getScheduler()->scheduleAsyncTask(new RemoveByIdTask([$sender->getName(), $args[1], $damage, &$this->shops]));
-						}else $sender->sendMessage(self::PREFIX.TF::YELLOW.'Usage: /'.$cmd->getName().' removebyid [item-id] [item-damage]');
+							}else{
+								$this->getServer()->getScheduler()->scheduleAsyncTask(new RemoveByIdTask([$sender->getName(), $args[1], $damage, &$this->shops]));
+							}
+						}else{
+							$sender->sendMessage(self::PREFIX.TF::YELLOW.'Usage: /'.$cmd->getName().' removebyid [item-id] [item-damage]');
+						}
 					}
 					break;
 				case "remove":
@@ -332,7 +349,9 @@ class Main extends PluginBase{
 						if(isset($args[1], $args[2]) && is_numeric($args[1]) && is_numeric($args[2]) && ($args[1] >= 0) && ($args[2] >= 1)){
 							$sender->sendMessage(self::PREFIX.TF::YELLOW.'Removed item on page #'.$args[1].', slot #'.$args[2].'.');
 							$this->removeItemOffShop($args[1], $args[2]);
-						} else $sender->sendMessage(TF::RED.'Page number and item slot must be integers (page > -1, slot > 0).');
+						}else{
+							$sender->sendMessage(TF::RED.'Page number and item slot must be integers (page > -1, slot > 0).');
+						}
 					}
 					break;
 				case "reload":
@@ -352,25 +371,25 @@ class Main extends PluginBase{
 								$sender->sendMessage(TF::RED.'You must set the "enable-sync" option to true in the config to use this command.');
 								return false;
 						}
-						$depends = $this->economyshop->getDescription()->getVersion() == '2.0.3';
-						$data = yaml_parse_file($this->economyshop->getDataFolder().'Shops.yml');
-						$cnt = count($data);
-						$keyId = $depends ? 'item' : 4;
-						$keyDmg = $depends ? 'meta' : 5;
-						$keyCnt = $depends ? 'amount' : 6;
-						$keyPrice = $depends ? 'price' : 8;
-						$i = 0;
-						$this->getLogger()->info($sender->getName().' is synchronizing data from economyshop.');
+						$provider = new \onebone\economyshop\provider\YAMLDataProvider($this->economyshop->getDataFolder().'Shops.yml', false);//read-only
+
+						$this->getLogger()->info($sender->getName().' is synchronizing data from EconomyShop.');
 						$time = microtime(true);
-						foreach($data as $detail){
-							$item = Item::get($detail[$keyId], $detail[$keyDmg], $detail[$keyCnt]);
-							$price = $detail[$keyPrice];
-							$this->addToChestShop($item, $price);
-							$sender->sendMessage(TF::YELLOW.'Synchronizing data from EconomyShop '.TF::GREEN.'('.TF::GRAY.++$i.TF::GREEN.'/'.TF::GRAY.$cnt.TF::GREEN.')');
+
+						foreach($provider->getAll() as $shop){
+							if (is_string($shop["item"] ?? $shop[4])){
+								$itemId = ItemFactory::fromString((string) ($shop["item"] ?? $shop[4]), false)->getId();
+							}else{
+								$itemId = ItemFactory::get((int) ($shop["item"] ?? $shop[4]), false)->getId();
+							}
+							$item = ItemFactory::get($itemId, (int) ($shop["meta"] ?? $shop[5]), (int) ($shop["amount"] ?? $shop[7]));
+
+							$this->addToChestShop($item, $shop["price"] ?? $shop[8]);
 						}
+
 						$time = microtime(true) - $time;
 						$sender->sendMessage(TF::YELLOW.'Data synchronized. Took '.TF::GREEN.$time.TF::YELLOW.'s.');
-						$this->getLogger()->info($sender->getName().' has synchronized data from chestshop.');
+						$this->getLogger()->info($sender->getName().' has synchronized data from EconomyShop (Took '.$time.' seconds).');
 					}
 					break;
 				default:
@@ -381,7 +400,7 @@ class Main extends PluginBase{
 			if($sender instanceof Player){
 				$this->sendChestShop($sender);
 			}else{
-				$sender->sendMessage(str_replace('{:cmd:}', $cmd, implode("\n", $this->helpcmd)));
+				$sender->sendMessage(str_replace('{:cmd:}', $cmd, implode("\n", self::HELP_CMD)));
 			}
 		}
 		return true;

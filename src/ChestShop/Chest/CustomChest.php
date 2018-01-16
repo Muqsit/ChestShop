@@ -27,15 +27,20 @@ use pocketmine\block\Block;
 use pocketmine\level\Level;
 use pocketmine\nbt\tag\{CompoundTag, IntTag};
 use pocketmine\Player;
+use pocketmine\tile\Chest;
 
-class CustomChest extends \pocketmine\tile\Chest{
+class CustomChest extends Chest{
 
+	/** @var int[] */
 	private $replacement = [0, 0];
 
 	public function __construct(Level $level, CompoundTag $nbt){
 		parent::__construct($level, $nbt);
+
 		$this->inventory = new CustomChestInventory($this);
-		$this->replacement = [$this->getBlock()->getId(), $this->getBlock()->getDamage()];
+
+		$block = $this->getBlock();
+		$this->replacement = [$block->getId(), $block->getDamage()];
 	}
 
 	public function getInventory() : CustomChestInventory{
@@ -43,29 +48,22 @@ class CustomChest extends \pocketmine\tile\Chest{
 	}
 
 	private function getReplacement() : Block{
-		return Block::get(...$this->replacement);
+		return Block::get($this->replacement[0], $this->replacement[1], $this);
 	}
 
 	public function sendReplacement(Player $player){
-		$block = $this->getReplacement();
-		$block->x = $this->x;
-		$block->y = $this->y;
-		$block->z = $this->z;
-		$block->level = $this->getLevel();
-		if($block->level !== null){
-			$block->level->sendBlocks([$player], [$block]);
-		}
+		$player->level->sendBlocks([$player], [$this->getReplacement()]);
 	}
 
-	public function spawnTo(Player $player){
-		//needless
+	public function spawnTo(Player $player) : bool{
+		return false;//needless
 	}
 
-	public function spawnToAll(){
+	public function spawnToAll() : void{
 		//needless
 	}
 	
-	public function saveNBT(){
+	public function saveNBT() : void{
 		//needless
 	}
 }

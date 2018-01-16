@@ -15,12 +15,15 @@ class RemoveByIdTask extends AsyncTask{
 	* 	(int) (assoc array)
 	* ];
 	*/
+
+	/** @var Volatile */
 	private $data;
+
 	public function __construct(array $data){
 		$this->data = $data;
 	}
 
-	public function onRun(){
+	public function onRun() : void{
 		$res = [];
 		foreach($this->data[3] as $k => $v){
 			if($v[0] == $this->data[1] && $v[1] == $this->data[2]){
@@ -30,7 +33,7 @@ class RemoveByIdTask extends AsyncTask{
 		$this->setResult($res);
 	}
 
-	public function onCompletion(Server $server){
+	public function onCompletion(Server $server) : void{
 		$res = $this->getResult();
 		if(($player = $server->getPlayerExact($this->data[0])) instanceof Player){
 			$player->sendMessage(Main::PREFIX.TF::YELLOW.count($res).' items were removed off auction house (ID: '.$this->data[1].', DAMAGE: '.$this->data[2].').');

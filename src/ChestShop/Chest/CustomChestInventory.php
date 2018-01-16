@@ -22,24 +22,19 @@
 *
 */
 namespace ChestShop\Chest;
-use pocketmine\inventory\InventoryType;
+
+use ChestShop\Main;
+
+use pocketmine\inventory\ChestInventory;
 use pocketmine\Player;
 use pocketmine\block\Block;
 
-class CustomChestInventory extends \pocketmine\inventory\ChestInventory{
+class CustomChestInventory extends ChestInventory{
 
-	public function __construct(CustomChest $tile){
-		parent::__construct($tile, InventoryType::get(InventoryType::CHEST));
-	}
-
-	public function onOpen(Player $who){
-		parent::onOpen($who);
-	}
-
-	public function onClose(Player $who){
+	public function onClose(Player $who) : void{
 		$this->holder->sendReplacement($who);
 		parent::onClose($who);
-		unset(\ChestShop\Main::getInstance()->clicks[$who->getId()]);
+		unset(Main::getInstance()->clicks[$who->getId()]);
 		$this->holder->close();
 	}
 }

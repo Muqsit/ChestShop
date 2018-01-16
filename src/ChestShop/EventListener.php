@@ -29,12 +29,15 @@ use onebone\economyapi\EconomyAPI;
 use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\inventory\InventoryTransactionEvent;
 use pocketmine\event\Listener;
+use pocketmine\inventory\{PlayerCursorInventory, PlayerInventory};
 use pocketmine\item\Item;
+use pocketmine\network\mcpe\protocol\LevelEventPacket;
 use pocketmine\Player;
 use pocketmine\utils\TextFormat as TF;
 
 class EventListener implements Listener{
 
+	/** @var Main */
 	protected $plugin;
 
 	public function __construct(Main $plugin){
@@ -46,75 +49,76 @@ class EventListener implements Listener{
 	* Doesn't allow block breaking if there
 	* is a Chest Shop tile where the block is.
 	*/
-	public function onBreak(BlockBreakEvent $event){
-		if($event->getBlock()->getLevel()->getTile($event->getBlock()) instanceof CustomChest) $event->setCancelled();
+	public function onBreak(BlockBreakEvent $event) : void{
+		$block = $event->getBlock();
+		if($block->getLevel()->getTileAt($block->x, $block->y, $block->z) instanceof CustomChest){
+			$event->setCancelled();
+		}
 	}
 
 	/**
 	* This is where all the chest shop
 	* transaction are handled.
 	*/
-	public function onTransaction(InventoryTransactionEvent $event){
-		$transactions = $event->getTransaction()->getTransactions();
+	public function onTransaction(InventoryTransactionEvent $event) : void{
+        $transaction = $event->getTransaction();
+        $player = $transaction->getSource();
 
-		$player = null;
-		$chestinv = null;
-		$action = null;
-		foreach($transactions as $transaction){
-			if(($inv = $transaction->getInventory()) instanceof CustomChestInventory){
-				foreach($inv->getViewers() as $assumed){
-					if($assumed instanceof Player){
-						$player = $assumed;
-						$chestinv = $inv;
-						$action = $transaction;
-						break 2;
-					}
-				}
+		$actions = $transaction->getActions();
+		if(count($actions) !== 2){
+			return;
+		}
+
+		$inventoryAction = null;
+		$playerAction = null;
+
+		foreach($actions as $action){
+			$inventory = $action->getInventory();
+
+			if($inventory instanceof CustomChestInventory){
+				$inventoryAction = $action;
+			}elseif($inventory instanceof PlayerInventory || $inventory instanceof PlayerCursorInventory){
+				$playerAction = $action;
 			}
 		}
 
-		if(($player ?? $chestinv ?? $action) === null){
-			return;
-		}
+		if($inventoryAction !== null){
+			$event->setCancelled();//cancel ALL inventory transactions happening in CustomChestInventory
+			if($playerAction !== null){
+				//$itemPuttingIn = $playerAction->getSourceItem();
+				$itemTakingOut = $inventoryAction->getSourceItem();//item in the chest inventory when clicked.
 
-		/*
-		* $player => Player interacting with the GUI.
-		* $chestinv => The chest's inventory.
-		* $action => BaseTransaction|Transaction|SimpleTransactionGroup
-		*/
-		$event->setCancelled();
-		$item = $action->getSourceItem();
-		if($item->getId() === Item::AIR){
-			return;
-		}
+				$nbt = $itemTakingOut->getNamedTag();
+				if($nbt->hasTag("turner")){
+					$pagedata = $nbt->getIntArray("turner");
+					$page = $pagedata[Main::NBT_TURNER_DIRECTION] === Main::LEFT_TURNER ? --$pagedata[Main::NBT_TURNER_CURRENTPAGE] : ++$pagedata[Main::NBT_TURNER_CURRENTPAGE];
+					$this->plugin->fillInventoryWithShop($inventoryAction->getInventory(), $page);
+					return;
+				}
 
-		if(isset($item->getNamedTag()->turner)){
-			$pagedata = $item->getNamedTag()->turner->getValue();
-			$page = $pagedata[0] === 0 ? --$pagedata[1] : ++$pagedata[1];
-			$this->plugin->fillInventoryWithShop($chestinv, $page);
-			return;
-		}
+				if($nbt->hasTag("ChestShop")){
+					$cs = $nbt->getIntArray("ChestShop");
 
-		$data = isset($item->getNamedTag()->ChestShop) ? $item->getNamedTag()->ChestShop->getValue() : null;
-		if($data === null){
-			return;
-		}
+					$price = $cs[Main::NBT_CHESTSHOP_PRICE] ?? $this->plugin->defaultprice;
+					if(EconomyAPI::getInstance()->myMoney($player) >= $price){
+		 			 	$item = $this->plugin->getItemFromShop($cs[Main::NBT_CHESTSHOP_ID]);
+						$player->sendMessage(Main::PREFIX.TF::GREEN.'Purchased '.TF::BOLD.$item->getName().TF::RESET.TF::GREEN.TF::GRAY.' (x'.$item->getCount().')'.TF::GREEN.' for $'.$price.'.');
+						$player->getInventory()->addItem($item);
+						EconomyAPI::getInstance()->reduceMoney($player, $price);
+						unset($this->plugin->clicks[$player->getId()]);
 
-		$price = $data[0] ?? $this->plugin->defaultprice;
-		if(!isset($this->plugin->clicks[$player->getId()][$data[1]])){
-			$this->plugin->clicks[$player->getId()][$data[1]] = 1;
-			return;
-		}
-
-		if(EconomyAPI::getInstance()->myMoney($player) >= $price){
-	 	 	$item = $this->plugin->getItemFromShop($data[1]);
-			$player->sendMessage(Main::PREFIX.TF::GREEN.'Purchased '.TF::BOLD.$item->getName().TF::RESET.TF::GREEN.TF::GRAY.' (x'.$item->getCount().')'.TF::GREEN.' for $'.$price.'.');
-			$player->getInventory()->addItem($item);
-			EconomyAPI::getInstance()->reduceMoney($player, $price);
-			unset($this->plugin->clicks[$player->getId()]);
-		}else{
-			$player->sendMessage(Main::PREFIX.TF::RED.'You cannot afford this item.');
-			$chestinv->onClose($player);
+						$pk = new LevelEventPacket();
+						$pk->evid = LevelEventPacket::EVENT_SOUND_ORB;
+						$pk->data = PHP_INT_MAX;
+						$pk->position = $player->asVector3();
+						$player->dataPacket($pk);
+					}else{
+						$player->sendMessage(Main::PREFIX.TF::RED.'You cannot afford this item.');
+						$inventoryAction->getInventory()->onClose($player);
+					}
+					return;
+				}
+			}
 		}
 	}
 }
