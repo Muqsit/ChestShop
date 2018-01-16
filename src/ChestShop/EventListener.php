@@ -61,8 +61,8 @@ class EventListener implements Listener{
 	* transaction are handled.
 	*/
 	public function onTransaction(InventoryTransactionEvent $event) : void{
-        $transaction = $event->getTransaction();
-        $player = $transaction->getSource();
+		$transaction = $event->getTransaction();
+		$player = $transaction->getSource();
 
 		$actions = $transaction->getActions();
 		if(count($actions) !== 2){

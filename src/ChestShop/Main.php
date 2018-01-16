@@ -192,7 +192,7 @@ class Main extends PluginBase{
 	* @param int $id
 	* @return Item
 	*/
-	public function getItemFromShop(int $id): Item{
+	public function getItemFromShop(int $id) : Item{
 		if(isset($this->shops[$id])){
 			$data = $this->shops[$id];
 			return Item::get($data[0], $data[1], $data[2])->setNamedTag(unserialize($data[3]));
@@ -321,7 +321,7 @@ class Main extends PluginBase{
 								$sender->sendMessage(TF::RED.'Please enter a valid number.');
 							}
 						}
-					}    
+					}
 					break;
 				case "removebyid":
 					if($sender->hasPermission('chestshop.command.remove')){
@@ -359,7 +359,7 @@ class Main extends PluginBase{
 						$sender->sendMessage(self::PREFIX.TF::AQUA.'ChestShop is reloading...');
 						$this->reload();
 						$sender->sendMessage(self::PREFIX.TF::AQUA.'ChestShop has reloaded successfully.');
-					}    
+					}
 					break;
 				case "synceconomy":
 					if($sender->hasPermission('chestshop.command.opcmd')){
