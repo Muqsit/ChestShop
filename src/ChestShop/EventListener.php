@@ -30,6 +30,7 @@ use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\inventory\InventoryTransactionEvent;
 use pocketmine\event\Listener;
 use pocketmine\inventory\{PlayerCursorInventory, PlayerInventory};
+use pocketmine\inventory\transaction\action\DropItemAction;
 use pocketmine\item\Item;
 use pocketmine\network\mcpe\protocol\LevelEventPacket;
 use pocketmine\Player;
