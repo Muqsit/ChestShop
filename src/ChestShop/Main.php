@@ -106,7 +106,7 @@ class Main extends PluginBase{
 			$this->updateConfig($file);
 		}
 
-		$shops = yaml_parse_file($this->getDataFolder().'shops.yml');
+		$shops = @yaml_parse_file($this->getDataFolder().'shops.yml');
 		if(!empty($shops)){
 			$this->shops = $shops;
 		}
