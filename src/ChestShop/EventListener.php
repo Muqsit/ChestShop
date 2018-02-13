@@ -73,6 +73,8 @@ class EventListener implements Listener{
 		$playerAction = null;
 
 		foreach($actions as $action){
+			if($action instanceof DropItemAction)
+				$event->setCancelled(true);
 			$inventory = $action->getInventory();
 
 			if($inventory instanceof CustomChestInventory){
