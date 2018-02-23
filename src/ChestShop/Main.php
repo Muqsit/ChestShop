@@ -23,15 +23,15 @@
 */
 namespace ChestShop;
 
-use ChestShop\Chest\{CustomChest, CustomChestInventory};
+use muqsit\invmenu\{InvMenu, InvMenuHandler};
 
-use pocketmine\command\{Command, CommandSender};
 use pocketmine\block\Block;
+use pocketmine\command\{Command, CommandSender};
+use pocketmine\inventory\Inventory;
 use pocketmine\item\Item;
-use pocketmine\nbt\tag\{CompoundTag, IntTag, ListTag, StringTag, IntArrayTag};
+use pocketmine\nbt\tag\IntArrayTag;
 use pocketmine\Player;
 use pocketmine\plugin\PluginBase;
-use pocketmine\tile\Tile;
 use pocketmine\utils\TextFormat as TF;
 
 class Main extends PluginBase{
@@ -51,9 +51,9 @@ class Main extends PluginBase{
 
 	const HELP_CMD = [
 		TF::YELLOW.TF::BOLD.'Chest Shop'.TF::RESET,
-		TF::YELLOW.'/{:cmd:} add [price]'.TF::GRAY.' - Add the item in your hand to the chest shop.',
-		TF::YELLOW.'/{:cmd:} remove [page] [slot]'.TF::GRAY.' - Remove an item off the chest shop.',
-		TF::YELLOW.'/{:cmd:} reload'.TF::GRAY.' - Reload the plugin (to fix errors or refresh data).'
+		TF::YELLOW.'/{cmd} add [price]'.TF::GRAY.' - Add the item in your hand to the chest shop.',
+		TF::YELLOW.'/{cmd} remove [page] [slot]'.TF::GRAY.' - Remove an item off the chest shop.',
+		TF::YELLOW.'/{cmd} reload'.TF::GRAY.' - Reload the plugin (to fix errors or refresh data).'
 	];
 
 	const LEFT_TURNER = 0;
@@ -80,9 +80,11 @@ class Main extends PluginBase{
 	/** @var bool */
 	private $economyshop = false;
 
+	/** @var InvMenu */
+	private $menu;
+
 	public function onEnable() : void{
 		self::$instance = $this;
-		$this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
 		$this->getLogger()->notice(implode("\n", [
 			" ",
 			" _____ _               _   _____ _                 ",
@@ -115,20 +117,32 @@ class Main extends PluginBase{
 		$this->defaultprice = $config["default-price"] ?? 15000;
 		$this->notallowed = array_flip($config["banned-items"] ?? []);
 
-		Tile::registerTile(CustomChest::class);
-
 		if($config['enable-sync'] == true){
 			$this->economyshop = $this->getServer()->getPluginManager()->getPlugin('EconomyShop');
 		}else{
 			$this->economyshop = false;
 		}
+
+		$this->initializeMenu();
 	}
 
 	/**
-	* @return Main
-	*/
+	 * @return Main
+	 */
 	public static function getInstance() : Main{
 		return self::$instance;
+	}
+
+	public function initializeMenu() : void{
+		if(!InvMenuHandler::isRegistered()){
+			InvMenuHandler::register($this);
+		}
+
+		$this->menu = InvMenu::create(InvMenu::TYPE_CHEST)
+			->readOnly()
+			->sessionize()
+			->setName("Chest Shop")
+			->setListener([new ShopListener($this), "onTransaction"]);
 	}
 
 	public function onDisable() : void{
@@ -136,8 +150,8 @@ class Main extends PluginBase{
 	}
 
 	/**
-	* Updates config with newer data.
-	*/
+	 * Updates config with newer data.
+	 */
 	private function updateConfig(string $config) : void{
 		if(isset(self::CONFIG[$config])){
 			$data = [];
@@ -154,24 +168,14 @@ class Main extends PluginBase{
 	}
 
 	/**
-	* Sends the chest shop (inventory)
-	* to the player.
-	*
-	* @param Player $player
-	*/
+	 * Sends the chest shop (inventory)
+	 * to the player.
+	 *
+	 * @param Player $player
+	 */
 	public function sendChestShop(Player $player) : void{
-		/** @var Chest $tile */
-		$tile = Tile::createTile('CustomChest', $player->getLevel(), new CompoundTag("", [
-			new StringTag('id', Tile::CHEST),
-			new IntTag('ChestShop', 1),
-			new IntTag('x', floor($player->x)),
-			new IntTag('y', floor($player->y) - 4),
-			new IntTag('z', floor($player->z))
-		]));
-		$block = Block::get(Block::CHEST, 0, $tile);
-		$block->level->sendBlocks([$player], [$block]);
-		$this->fillInventoryWithShop($inventory = $tile->getInventory());
-		$player->addWindow($inventory);
+		$this->fillInventoryWithShop($this->menu->getInventory($player));//this is a big NO tbh, uh
+		$this->menu->send($player);
 	}
 
 	public function reload() : void{
@@ -187,11 +191,11 @@ class Main extends PluginBase{
 	}
 
 	/**
-	* Get item from shop via shop ID.
-	*
-	* @param int $id
-	* @return Item
-	*/
+	 * Get item from shop via shop ID.
+	 *
+	 * @param int $id
+	 * @return Item
+	 */
 	public function getItemFromShop(int $id) : Item{
 		if(isset($this->shops[$id])){
 			$data = $this->shops[$id];
@@ -201,15 +205,16 @@ class Main extends PluginBase{
 	}
 
 	/**
-	* Fills the $inventory with contents
-	* of chest shop.
-	*
-	* @param ChestInventory $inventory
-	* @param int $page
-	*/
-	public function fillInventoryWithShop(CustomChestInventory $inventory, int $page = 0) : void{
+	 * Fills the $inventory with contents
+	 * of chest shop.
+	 *
+	 * @param ChestInventory $inventory
+	 * @param int $page
+	 */
+	public function fillInventoryWithShop(Inventory $inventory, int $page = 0) : void{
 		$contents = [];
-		if(!empty($this->shops)) {
+
+		if(count($this->shops) !== 0) {
 			$chunked = array_chunk($this->shops, 24, true);
 			if($page < 0){
 				$page = count($chunked) - 1;
@@ -222,7 +227,7 @@ class Main extends PluginBase{
 				}
 
 				$item->setNamedTag($nbt = unserialize($data[3]));
-				$item->setCustomName(TF::RESET.$item->getName()."\n \n".TF::YELLOW.'Tap to purchase for '.TF::BOLD.'$'.$nbt->ChestShop->getValue()[0].TF::RESET);
+				$item->setCustomName(TF::RESET.$item->getName()."\n \n".TF::YELLOW.'Tap to purchase for '.TF::BOLD.'$'.$nbt->getIntArray('ChestShop')[0].TF::RESET);
 				$contents[] = $item;
 			}
 		}
@@ -242,11 +247,11 @@ class Main extends PluginBase{
 	}
 
 	/**
-	* Adds an item to the chest shop.
-	*
-	* @param Item $item
-	* @param int $price
-	*/
+	 * Adds an item to the chest shop.
+	 *
+	 * @param Item $item
+	 * @param int $price
+	 */
 	public function addToChestShop(Item $item, int $price) : void{
 		while(isset($this->shops[$key = rand()]));
 		$item->setNamedTagEntry(new IntArrayTag('ChestShop', [$price, $key]));
@@ -254,13 +259,13 @@ class Main extends PluginBase{
 	}
 
 	/**
-	* Removes an item off the chest shop.
-	*
-	* @param int $page
-	* @param int $slot
-	*/
+	 * Removes an item off the chest shop.
+	 *
+	 * @param int $page
+	 * @param int $slot
+	 */
 	public function removeItemOffShop(int $page, int $slot) : void{
-		if(empty($this->shops)){
+		if(count($this->shops) === 0){
 			return;
 		}
 		$keys = array_keys($this->shops);//$this->shops is an associative array.
@@ -269,15 +274,15 @@ class Main extends PluginBase{
 	}
 
 	/**
-	* Checks whether or not it's allowed
-	* to put an item in the chest shop.
-	* This can be set up in the config
-	* (banned-items key in the config).
-	*
-	* @param int $itemId
-	* @param int $itemDamage
-	* @return bool
-	*/
+	 * Checks whether or not it's allowed
+	 * to put an item in the chest shop.
+	 * This can be set up in the config
+	 * (banned-items key in the config).
+	 *
+	 * @param int $itemId
+	 * @param int $itemDamage
+	 * @return bool
+	 */
 	private function isNotAllowed(int $itemId, int $itemDamage = 0) : bool{
 		if($itemDamage === 0){
 			return isset($this->notallowed[$itemId]) || isset($this->notallowed[$itemId.':'.$itemDamage]);
@@ -286,13 +291,13 @@ class Main extends PluginBase{
 	}
 
 	/**
-	* Removes item off chest shop
-	* by key.
-	*
-	* @param int|array $keys
-	*/
-	public function removeItemsByKey($keys) : void{
-		foreach((array)$keys as $key){
+	 * Removes item off chest shop
+	 * by key.
+	 *
+	 * @param int $keys
+	 */
+	public function removeItemsByKey(int ...$keys) : void{
+		foreach($keys as $key){
 			unset($this->shops[$key]);
 		}
 	}
@@ -301,7 +306,7 @@ class Main extends PluginBase{
 		if(isset($args[0])){
 			switch(strtolower($args[0])){
 				case "help":
-					$sender->sendMessage(str_replace('{:cmd:}', $cmd, implode("\n", self::HELP_CMD)));
+					$sender->sendMessage(str_replace('{cmd}', $cmd, implode("\n", self::HELP_CMD)));
 					break;
 				case "about":
 					$sender->sendMessage(TF::YELLOW.TF::BOLD.'ChestShop'.TF::RESET."\n".TF::GRAY.'Created by Muqsit ('.TF::AQUA.'@muqsitrayyan'.TF::GRAY.').');
@@ -400,7 +405,7 @@ class Main extends PluginBase{
 			if($sender instanceof Player){
 				$this->sendChestShop($sender);
 			}else{
-				$sender->sendMessage(str_replace('{:cmd:}', $cmd, implode("\n", self::HELP_CMD)));
+				$sender->sendMessage(str_replace('{cmd}', $cmd, implode("\n", self::HELP_CMD)));
 			}
 		}
 		return true;

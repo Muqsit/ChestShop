@@ -4,4 +4,7 @@ branches:
 projects:
   ChestShop:
     path: ""
+    libs:
+      - src: muqsit/InvMenu/InvMenu
+        version: 1.1
 ...

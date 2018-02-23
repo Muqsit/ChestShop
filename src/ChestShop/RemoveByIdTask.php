@@ -8,13 +8,13 @@ use pocketmine\utils\TextFormat as TF;
 class RemoveByIdTask extends AsyncTask{
 
 	/*
-	* $data = [
-	* 	(string) (playername)
-	* 	(int) (itemid)
-	* 	(int) (itemdamage)
-	* 	(int) (assoc array)
-	* ];
-	*/
+	 * $data = [
+	 * 	(string) (playername)
+	 * 	(int) (itemid)
+	 * 	(int) (itemdamage)
+	 * 	(int) (assoc array)
+	 * ];
+	 */
 
 	/** @var Volatile */
 	private $data;
@@ -38,6 +38,6 @@ class RemoveByIdTask extends AsyncTask{
 		if(($player = $server->getPlayerExact($this->data[0])) instanceof Player){
 			$player->sendMessage(Main::PREFIX.TF::YELLOW.count($res).' items were removed off auction house (ID: '.$this->data[1].', DAMAGE: '.$this->data[2].').');
 		}
-		$server->getPluginManager()->getPlugin("ChestShop")->removeItemsByKey($res);
+		$server->getPluginManager()->getPlugin("ChestShop")->removeItemsByKey(...$res);
 	}
 }
