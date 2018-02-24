@@ -134,6 +134,12 @@ class Main extends PluginBase{
 	}
 
 	public function initializeMenu() : void{
+		if(!class_exists(InvMenu::class)){
+			$this->getLogger()->warning($this->getName()." uses the virion 'InvMenu' which doesn't exist. Please use the pre-built .phar file from poggit. If you would still like to continue running ChestShop from source, install DEVirion plugin and InvMenu virion and place InvMenu in the /virions folder.");
+			$this->getServer()->getPluginManager()->disablePlugin($this);
+			return;
+		}
+
 		if(!InvMenuHandler::isRegistered()){
 			InvMenuHandler::register($this);
 		}
