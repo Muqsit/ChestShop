@@ -1,4 +1,6 @@
 # ChestShop
+[![](https://poggit.pmmp.io/shield.state/ChestShop)](https://poggit.pmmp.io/p/ChestShop)
+
 ChestShop for PocketMine-MP (pmmp) by Muqsit. Note that you must have **EconomyAPI** installed before running the plugin, else the plugin won't enable.
 Chest shop allows you to create Chest GUI based shops - a widely used feature in minigames such as MoneyWars, SkyBlock and SkyWars.
 If you are looking for a compressed .phar file, go here: https://poggit.pmmp.io/ci/Muqsit/ChestShop/ChestShop
