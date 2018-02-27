@@ -160,10 +160,8 @@ class Main extends PluginBase{
 	 */
 	private function updateConfig(string $config) : void{
 		if(isset(self::CONFIG[$config])){
-			$data = [];
-			if(is_file($path = $this->getDataFolder().$config)){
-				$data = yaml_parse_file($path);
-			}
+			$path = $this->getDataFolder().$config;
+			$data = is_file($path) ? yaml_parse_file($path) : self::CONFIG[$config];
 			foreach(self::CONFIG[$config] as $key => $value){
 				if(!isset($data[$key])){
 					$data[$key] = $value;
