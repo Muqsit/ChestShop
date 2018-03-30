@@ -10,7 +10,7 @@ use pocketmine\nbt\BigEndianNBTStream;
 use pocketmine\nbt\tag\{CompoundTag, FloatTag, ListTag};
 use pocketmine\Player;
 use pocketmine\plugin\PluginBase;
-use pocketmine\utils\TextFormat as TF;
+use pocketmine\utils\{Config, TextFormat as TF};
 
 class ChestShop extends PluginBase{
 
@@ -26,16 +26,26 @@ class ChestShop extends PluginBase{
 	/** @var InvMenu */
 	private $menu;
 
+	/** @var Config */
+	private $buttonsConfig;
+
 	public function onEnable() : void{
 		if(!is_dir($this->getDataFolder())){
 			mkdir($this->getDataFolder());
 		}
 
 		$this->saveResource("config.yml");
+		$this->saveResource("buttons.yml");
 
 		$this->eventHandler = new EventHandler($this);
+		$this->buttonsConfig = new Config($this->getDataFolder()."buttons.yml");
 
 		$config = $this->getConfig();
+
+		$buttons = $this->getButtonsConfig()->get("buttons");
+		if(is_array($buttons)){
+			Button::setOptions($buttons);
+		}
 
 		if(!InvMenuHandler::isRegistered()){
 			InvMenuHandler::register($this);
@@ -59,7 +69,13 @@ class ChestShop extends PluginBase{
 	public function onDisable() : void{
 		if(!$this->crashed){
 			$this->saveShops();
+			$this->getButtonsConfig()->set("buttons", Button::getOptions());
+			$this->getButtonsConfig()->save();
 		}
+	}
+
+	private function getButtonsConfig() : Config{
+		return $this->buttonsConfig;
 	}
 
 	private function loadShops() : void{

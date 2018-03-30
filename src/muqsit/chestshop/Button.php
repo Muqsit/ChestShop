@@ -11,30 +11,110 @@ class Button{
 	const TURN_RIGHT = 1;
 	const CATEGORIES = 2;
 
+	private static $options = [
+		"turn_left" => [
+			"id" => Item::PAPER,
+			"damage" => 0,
+			"count" => 1,
+			"name" => TF::RESET.TF::GOLD.TF::BOLD.'<- Turn Left',
+			"lore" => [
+				TF::RESET.TF::GRAY.'Turn to left page.'
+			]
+		],
+		"turn_right" => [
+			"id" => Item::PAPER,
+			"damage" => 0,
+			"count" => 1,
+			"name" => TF::RESET.TF::GOLD.TF::BOLD.'Turn Right ->',
+			"lore" => [
+				TF::RESET.TF::GRAY.'Turn to right page.'
+			]
+		],
+		"categories" => [
+			"id" => Item::CHEST,
+			"damage" => 0,
+			"count" => 1,
+			"name" => TF::RESET.TF::YELLOW.TF::BOLD.'View Categories',
+			"lore" => [
+				TF::RESET.TF::GRAY.'Back to categories.'
+			]
+		],
+	];
+
+	public static function setOptions(array $options) : void{
+		foreach($options as $type => $option){
+			if(isset(self::$options[$type])){
+				foreach($option as $name => $value){
+					if(isset(self::$options[$type][$name]) && gettype(self::$options[$type][$name]) === gettype($value)){
+						switch($name){
+							case "name":
+								$value = TF::colorize($value);
+								break;
+							case "lore":
+								$value = array_map([TF::class, "colorize"], $value);
+								break;
+						}
+						self::$options[$type][$name] = $value;
+					}
+				}
+			}
+		}
+	}
+
+	public static function getOptions() : array{
+		$options = self::$options;
+		foreach($options as &$option){
+			foreach($option as $name => &$value){
+				switch($name){
+					case "name":
+						$value = str_replace(TF::ESCAPE, "&", $value);
+						break;
+					case "lore":
+						$value = array_map(function(string $string) : string{
+							return str_replace(TF::ESCAPE, "&", $string);
+						}, $value);
+						break;
+				}
+			}
+		}
+
+		return $options;
+	}
+
 	public static function get(int $turn, ...$args) : Item{
 		switch($turn){
 			case Button::TURN_LEFT:
-				$item = Item::get(Item::PAPER);
-				$item->setCustomName(TF::RESET.TF::GOLD.TF::BOLD.'<- Turn Left');
-				$item->setLore([TF::GRAY.'Turn to left page.']);
+				$item = Button::itemFromData(self::$options["turn_left"]);
 				$item->setNamedTagEntry(new ByteTag("Button", Button::TURN_LEFT));
 				$item->setNamedTagEntry(new StringTag("Category", $args[0]));
 				return $item;
 			case Button::TURN_RIGHT:
-				$item = Item::get(Item::PAPER);
-				$item->setCustomName(TF::RESET.TF::GOLD.TF::BOLD.'Turn Right ->');
-				$item->setLore([TF::GRAY.'Turn to right page.']);
+				$item = Button::itemFromData(self::$options["turn_right"]);
 				$item->setNamedTagEntry(new ByteTag("Button", Button::TURN_RIGHT));
 				$item->setNamedTagEntry(new StringTag("Category", $args[0]));
 				return $item;
 			case Button::CATEGORIES:
-				$item = Item::get(Item::CHEST);
-				$item->setCustomName(TF::RESET.TF::YELLOW.TF::BOLD.'Categories');
-				$item->setLore([TF::GRAY.'Back to categories.']);
+				$item = Button::itemFromData(self::$options["categories"]);
 				$item->setNamedTagEntry(new ByteTag("Button", Button::CATEGORIES));
 				return $item;
 		}
 
 		throw new \InvalidArgumentException("Invalid button type '$turn'");
+	}
+
+	public static function itemFromData(array $data) : Item{
+		[
+			"id" => $id,
+			"damage" => $damage,
+			"count" => $count,
+			"name" => $name,
+			"lore" => $lore
+		] = $data;
+
+		$item = Item::get($id, $damage, $count);
+		$item->setCustomName($name);
+		$item->setLore($lore);
+
+		return $item;
 	}
 }
