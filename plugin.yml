@@ -1,8 +1,7 @@
 name: ChestShop
-main: ChestShop\Main
+main: muqsit\chestshop\ChestShop
 api: 3.0.0-ALPHA11
-version: 3.0
-depend: [EconomyAPI]
+version: 4
 commands:
   chestshop:
     aliases: ["cs", "cshop"]
