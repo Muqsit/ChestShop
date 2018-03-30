@@ -1,6 +1,9 @@
 ---
-default-price: 15000
+# These items cannot be sold in-game using "/cs add".
 banned-items:
 - 35:1
 - 7
+
+# Whether to enable the "/cs synceconomy" command.
+'enable-sync': false
 ...

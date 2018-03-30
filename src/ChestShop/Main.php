@@ -38,17 +38,6 @@ class Main extends PluginBase{
 
 	const PREFIX = TF::BOLD.TF::YELLOW.'CS '.TF::RESET;
 
-	const CONFIG = [
-		'config.yml' => [
-			'default-price' => 15000,
-			'banned-items' => [
-				'35:1',
-				7,
-			],
-			'enable-sync' => false
-		]
-	];
-
 	const HELP_CMD = [
 		TF::YELLOW.TF::BOLD.'Chest Shop'.TF::RESET,
 		TF::YELLOW.'/{cmd} add [price]'.TF::GRAY.' - Add the item in your hand to the chest shop.',
@@ -64,9 +53,6 @@ class Main extends PluginBase{
 
 	const NBT_CHESTSHOP_PRICE = 0;
 	const NBT_CHESTSHOP_ID = 1;
-
-	/** @var int */
-	public $defaultprice;
 
 	/** @var Item[] */
 	protected $shops = [];
@@ -104,9 +90,8 @@ class Main extends PluginBase{
 			mkdir($this->getDataFolder());
 		}
 
-		foreach(array_keys(self::CONFIG) as $file){
-			$this->updateConfig($file);
-		}
+		$this->updateConfig("config.yml");
+		$this->updateConfig("shops.yml");
 
 		$shops = yaml_parse_file($this->getDataFolder().'shops.yml');
 		if(!empty($shops)){
@@ -114,10 +99,10 @@ class Main extends PluginBase{
 		}
 
 		$config = yaml_parse_file($this->getDataFolder().'config.yml');
-		$this->defaultprice = $config["default-price"] ?? 15000;
-		$this->notallowed = array_flip($config["banned-items"] ?? []);
 
-		if($config['enable-sync'] == true){
+		$this->loadBannedItemsList($config["banned-items"]);
+
+		if($config['enable-sync']){
 			$this->economyshop = $this->getServer()->getPluginManager()->getPlugin('EconomyShop');
 		}else{
 			$this->economyshop = false;
@@ -145,7 +130,7 @@ class Main extends PluginBase{
 		}
 
 		$this->menu = InvMenu::create(InvMenu::TYPE_CHEST)
-			->readOnly()
+			->readonly()
 			->sessionize()
 			->setName("Chest Shop")
 			->setListener([new ShopListener($this), "onTransaction"]);
@@ -159,15 +144,34 @@ class Main extends PluginBase{
 	 * Updates config with newer data.
 	 */
 	private function updateConfig(string $config) : void{
-		if(isset(self::CONFIG[$config])){
-			$path = $this->getDataFolder().$config;
-			$data = is_file($path) ? yaml_parse_file($path) : self::CONFIG[$config];
-			foreach(self::CONFIG[$config] as $key => $value){
+		$path = $this->getDataFolder().$config;
+
+		if(!is_file($path)){
+			if(!$this->saveResource($config)){
+				throw new \Error("Tried updating a non-existing config file ({$config}).");
+			}
+			return;
+		}
+
+		$data = yaml_parse_file($path);
+
+		$resource = $this->getResource($config);
+		$default_config = yaml_parse(stream_get_contents($resource));
+		fclose($resource);
+
+		if(!empty($default_config)){
+			$changed = false;
+
+			foreach($default_config as $key => $value){
 				if(!isset($data[$key])){
 					$data[$key] = $value;
+					$changed = true;
 				}
 			}
-			yaml_emit_file($path, $data);
+
+			if($changed){
+				yaml_emit_file($path, $data);
+			}
 		}
 	}
 
@@ -190,8 +194,31 @@ class Main extends PluginBase{
 			$this->shops = $shops;
 		}
 		$config = yaml_parse_file($this->getDataFolder().'config.yml');
-		$this->defaultprice = $config["default-price"] ?? 15000;
-		$this->notallowed = array_flip($config["banned-items"] ?? []);
+		$this->loadBannedItemsList($config["banned-items"]);
+	}
+
+	public function loadBannedItemsList(array $bannedItems) : void{
+		$corruptedItems = [];
+
+		foreach($bannedItems as $itemdata){
+			$itemdata = explode(":", $itemdata, 2);
+
+			if(!isset($itemdata[1])){
+				$itemdata[1] = 0;
+			}
+
+			if(is_numeric($itemdata[0]) && is_numeric($itemdata[1])){
+				$itemId = (int) $itemdata[0];
+				$itemDamage = (int) $itemdata[1];
+				$this->notallowed[($itemId << 16) | $itemDamage] = 1;
+			}else{
+				$corruptedItems[] = implode(":", $itemdata);
+			}
+		}
+
+		if(!empty($corruptedItems)){
+			$this->getLogger()->warning("Some items could not be added to the ban list due to incorrect formatting ({implode(", ", $corruptedItems)})");
+		}
 	}
 
 	/**
@@ -218,7 +245,7 @@ class Main extends PluginBase{
 	public function fillInventoryWithShop(Inventory $inventory, int $page = 0) : void{
 		$contents = [];
 
-		if(count($this->shops) !== 0) {
+		if(!empty($this->shops)) {
 			$chunked = array_chunk($this->shops, 24, true);
 			if($page < 0){
 				$page = count($chunked) - 1;
@@ -269,7 +296,7 @@ class Main extends PluginBase{
 	 * @param int $slot
 	 */
 	public function removeItemOffShop(int $page, int $slot) : void{
-		if(count($this->shops) === 0){
+		if(empty($this->shops)){
 			return;
 		}
 		$keys = array_keys($this->shops);//$this->shops is an associative array.
@@ -288,10 +315,7 @@ class Main extends PluginBase{
 	 * @return bool
 	 */
 	private function isNotAllowed(int $itemId, int $itemDamage = 0) : bool{
-		if($itemDamage === 0){
-			return isset($this->notallowed[$itemId]) || isset($this->notallowed[$itemId.':'.$itemDamage]);
-		}
-		return isset($this->notallowed[$itemId.':'.$itemDamage]);
+		return isset($this->notallowed[($itemId << 16) | $itemDamage]);
 	}
 
 	/**

@@ -52,14 +52,18 @@ class ShopListener{
 		$itemTakingOut = $inventoryAction->getSourceItem();//item in the chest inventory when clicked.
 
 		$nbt = $itemTakingOut->getNamedTag();
+
 		if($nbt->hasTag("turner")){
 			$pagedata = $nbt->getIntArray("turner");
 			$page = $pagedata[Main::NBT_TURNER_DIRECTION] === Main::LEFT_TURNER ? --$pagedata[Main::NBT_TURNER_CURRENTPAGE] : ++$pagedata[Main::NBT_TURNER_CURRENTPAGE];
 			$this->plugin->fillInventoryWithShop($inventoryAction->getInventory(), $page);
-		}elseif($nbt->hasTag("ChestShop")){
+			return true;
+		}
+
+		if($nbt->hasTag("ChestShop")){
 			$cs = $nbt->getIntArray("ChestShop");
 
-			$price = $cs[Main::NBT_CHESTSHOP_PRICE] ?? $this->plugin->defaultprice;
+			$price = $cs[Main::NBT_CHESTSHOP_PRICE];
 			if($this->economy->myMoney($player) >= $price){
  			 	$item = $this->plugin->getItemFromShop($cs[Main::NBT_CHESTSHOP_ID]);
 				$player->sendMessage(Main::PREFIX.TF::GREEN.'Purchased '.TF::BOLD.$item->getName().TF::RESET.TF::GREEN.TF::GRAY.' (x'.$item->getCount().')'.TF::GREEN.' for $'.$price.'.');
@@ -76,6 +80,7 @@ class ShopListener{
 				$inventoryAction->getInventory()->onClose($player);
 			}
 		}
+
 		return true;
 	}
 }
