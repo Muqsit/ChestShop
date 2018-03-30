@@ -37,10 +37,10 @@ class ChestShop extends PluginBase{
 		$this->saveResource("config.yml");
 		$this->saveResource("buttons.yml");
 
-		$this->eventHandler = new EventHandler($this);
-		$this->buttonsConfig = new Config($this->getDataFolder()."buttons.yml");
-
 		$config = $this->getConfig();
+
+		$this->eventHandler = new EventHandler($this, $config->get("double-tapping", false));
+		$this->buttonsConfig = new Config($this->getDataFolder()."buttons.yml");
 
 		$buttons = $this->getButtonsConfig()->get("buttons");
 		if(is_array($buttons)){

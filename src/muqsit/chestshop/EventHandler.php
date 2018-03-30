@@ -81,13 +81,16 @@ class EventHandler implements Listener{
 				return true;
 			}
 
-			if($this->doubleclicks !== null && (
-				!isset($this->doubleclicks[$playerId = $player->getId()]) ||
-				$player->ticksLived - $this->doubleclicks[$playerId] > 20
-			)){
-				//maybe add a popup or a message here regarding double tapping?
-				$this->doubleclicks[$playerId] = $player->ticksLived;
-				return true;
+			if($this->doubleclicks !== null){
+				if(
+					!isset($this->doubleclicks[$playerId = $player->getId()]) ||
+					$player->ticksLived - $this->doubleclicks[$playerId] > 15//15 tick delay for double taps, probably make this a configurable number
+				){
+					//maybe add a popup or a message here regarding double tapping?
+					$this->doubleclicks[$playerId] = $player->ticksLived;
+					return true;
+				}
+				unset($this->doubleclicks[$playerId]);
 			}
 
 			ChestShop::toOriginalItem($itemClicked);

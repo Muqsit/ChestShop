@@ -1,0 +1,4 @@
+---
+# Whether to have players double-tap items in the GUI to purchase.
+double-tapping: false
+...
