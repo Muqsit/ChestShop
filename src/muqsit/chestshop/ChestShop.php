@@ -169,46 +169,48 @@ class ChestShop extends PluginBase{
 		}
 
 		switch($args[0]){
+			case "addcat":
 			case "addcategory":
-				if($sender->hasPermission('chestshop.command.add')){
+				if($sender->hasPermission("chestshop.command.admin")){
 					if(!isset($args[1])){
-						$sender->sendMessage(TF::RED.'/cs addcategory <name>');
+						$sender->sendMessage(TF::RED."/cs addcategory <name>");
 						return false;
 					}
 
 					$item = $sender->getInventory()->getItemInHand();
 					if($item->isNull()){
-						$sender->sendMessage(TF::RED.'Please hold an item in your hand. That item will be used as a button in the /'.$label.' GUI.');
+						$sender->sendMessage(TF::RED."Please hold an item in your hand. That item will be used as a button in the /{$label} GUI.");
 						return false;
 					}
 
 					if(!$this->addCategory($args[1], $item)){
-						$sender->sendMessage(TF::RED.'A category named '.TF::clean($args[1]).' already exists, please choose a new name.');
+						$sender->sendMessage(TF::RED."A category named ".TF::clean($args[1])." already exists, please choose a new name.");
 						return false;
 					}
 
-					$sender->sendMessage(TF::GREEN.'Successfully created category '.$args[1].', use /cs to view it.');
+					$sender->sendMessage(TF::GREEN."Successfully created category {$args[1]}, use /cs to view it.");
 					return true;
 				}
 				break;
+			case "removecat":
 			case "removecategory":
-				if($sender->hasPermission('chestshop.command.add')){
+				if($sender->hasPermission("chestshop.command.admin")){
 					if(!isset($args[1])){
-						$sender->sendMessage(TF::RED.'/cs removecategory <name>');
+						$sender->sendMessage(TF::RED."/cs removecategory <name>");
 						return false;
 					}
 
 					if(!$this->removeCategory($args[1])){
-						$sender->sendMessage(TF::RED.'No category named '.TF::clean($args[1]).' could be found.');
+						$sender->sendMessage(TF::RED."No category named ".TF::clean($args[1])." could be found.");
 						return false;
 					}
 
-					$sender->sendMessage(TF::GREEN.'Successfully removed category '.$args[1].'.');
+					$sender->sendMessage(TF::GREEN."Successfully removed category {$args[1]}.");
 					return true;
 				}
 				break;
 			case "categories":
-				if($sender->hasPermission('chestshop.command.add')){
+				if($sender->hasPermission("chestshop.command.admin")){
 					foreach($this->categories as $category){
 						$sender->sendMessage($category->getName());
 					}
@@ -216,32 +218,43 @@ class ChestShop extends PluginBase{
 				}
 				break;
 			case "additem":
-				if($sender->hasPermission('chestshop.command.add')){
+				if($sender->hasPermission("chestshop.command.admin")){
 					if(!isset($args[1])){
-						$sender->sendMessage(TF::RED.'/cs additem <category> <price>');
+						$sender->sendMessage(TF::RED."/cs additem <category> <price>");
 						return false;
 					}
 
 					$category = $this->getCategory($args[1]);
 					if($category === null){
-						$sender->sendMessage(TF::RED.'No category named '.TF::clean($args[1]).' could be found.');
+						$sender->sendMessage(TF::RED."No category named ".TF::clean($args[1])." could be found.");
 						return false;
 					}
 
 					$item = $sender->getInventory()->getItemInHand();
 
 					if($item->isNull()){
-						$sender->sendMessage(TF::RED.'Please hold an item in your hand.');
+						$sender->sendMessage(TF::RED."Please hold an item in your hand.");
 					}else{
 						if(isset($args[2]) && is_numeric($args[2]) && $args[2] >= 0) {
 							$category->addItem($item, $args[2]);
-							$sender->sendMessage(TF::YELLOW.'Added '.$item->getName().' to category "'.$category->getName().TF::RESET.TF::YELLOW.'" for $'.$args[2].'.');
+							$sender->sendMessage(TF::YELLOW."Added ".$item->getName()." to category '".$category->getName().TF::RESET.TF::YELLOW."' for \${$args[2]}.");
 						}else{
-							$sender->sendMessage(TF::RED.'Please enter a valid number.');
+							$sender->sendMessage(TF::RED."Please enter a valid number.");
 						}
 					}
 				}
 				break;
+		}
+
+		if($sender->hasPermission("chestshop.command.admin")){
+			$sender->sendMessage(
+				TF::YELLOW.TF::BOLD."ChestShop v".$this->getDescription()->getVersion().TF::RESET."\n".
+				TF::GOLD."/".$label." ".TF::GRAY."addcat/addcategory <name> - Add a category named <name> in /".$label."\n".
+				TF::GOLD."/".$label." ".TF::GRAY."removecat/removecategory <name> - Remove category <name> from /".$label."\n".
+				TF::GOLD."/".$label." ".TF::GRAY."categories - List all categories\n".
+				TF::GOLD."/".$label." ".TF::GRAY."additem <category> <price> - Add held item to <category> for <price>"
+			);
+			return true;
 		}
 
 		return false;

@@ -49,7 +49,7 @@ class Category{
 	public function getIdentifier() : Item{
 		$item = clone $this->identifier;
 		$item->setCustomName(TF::RESET.TF::BOLD.TF::AQUA.$this->name);
-		$item->setLore([TF::RESET.TF::GRAY.'Click to view this category.']);
+		$item->setLore([TF::RESET.TF::GRAY."Click to view this category."]);
 		$item->setNamedTagEntry(new StringTag("Category", $this->getRealName()));
 		return $item;
 	}
@@ -68,7 +68,7 @@ class Category{
 		$item->setNamedTagEntry(new FloatTag("ChestShop", $cost));
 
 		$lore = $item->getLore();
-		$lore[] = TF::RESET.TF::YELLOW.TF::BOLD.'COST: $'.TF::RESET.TF::GOLD.sprintf("%.2f", $cost);
+		$lore[] = TF::RESET.TF::YELLOW.TF::BOLD."COST: \$".TF::RESET.TF::GOLD.sprintf("%.2f", $cost);
 		$item->setLore($lore);
 
 		$this->items[] = $item;

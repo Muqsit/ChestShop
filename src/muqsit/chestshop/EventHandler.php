@@ -51,17 +51,17 @@ class EventHandler implements Listener{
 			$currentpage = $this->currentpage[$playerId = $player->getId()] ?? 1;
 			switch($nbt->getByte("Button")){
 				case Button::TURN_LEFT:
-					$this->currentpage[$playerId] = $this->plugin->sendCategory($player, $nbt->getString("Category"), ++$currentpage, false);
+					$this->currentpage[$playerId] = $this->plugin->sendCategory($player, $category = $nbt->getString("Category"), ++$currentpage, false);
 					if($this->currentpage[$playerId] === false){
 						$player->removeWindow($inventoryAction->getInventory());
-						$player->sendMessage(TF::RED.'Error 404: Category not found');
+						$player->sendMessage(TF::RED."Could not find category '".$category."', perhaps it has been removed.");
 					}
 					break;
 				case Button::TURN_RIGHT:
-					$this->currentpage[$playerId] = $this->plugin->sendCategory($player, $nbt->getString("Category"), ++$currentpage, false);
+					$this->currentpage[$playerId] = $this->plugin->sendCategory($player, $category = $nbt->getString("Category"), ++$currentpage, false);
 					if($this->currentpage[$playerId] === false){
 						$player->removeWindow($inventoryAction->getInventory());
-						$player->sendMessage(TF::RED.'Error 404: Category not found');
+						$player->sendMessage(TF::RED."Could not find category '".$category."', perhaps it has been removed.");
 					}
 					break;
 				case Button::CATEGORIES:
@@ -76,7 +76,7 @@ class EventHandler implements Listener{
 			$cost = $nbt->getFloat("ChestShop");
 
 			if($this->economy->myMoney($player) < $cost){
-				$player->sendMessage(TF::RED.'You do not have enough money to purchase '.$itemClicked->getName().'.');
+				$player->sendMessage(TF::RED."You do not have enough money to purchase ".$itemClicked->getName().".");
 				$player->removeWindow($inventoryAction->getInventory());
 				return true;
 			}
@@ -100,7 +100,7 @@ class EventHandler implements Listener{
 				$level->dropItem($player, $item);
 			}
 
-			$player->sendMessage(TF::YELLOW.'Purchased '.$itemClicked->getName().' (x'.$itemClicked->getCount().')'.TF::RESET.TF::YELLOW.' for $'.TF::RESET.TF::GOLD.$cost);
+			$player->sendMessage(TF::YELLOW."Purchased ".$itemClicked->getName()." (x".$itemClicked->getCount().")".TF::RESET.TF::YELLOW." for \$".TF::RESET.TF::GOLD.$cost);
 			$this->economy->reduceMoney($player, $cost);
 		}
 
@@ -113,7 +113,7 @@ class EventHandler implements Listener{
 		if($nbt->hasTag("Category")){
 			$player->removeWindow($inventoryAction->getInventory());
 			if(!$this->plugin->sendCategory($player, $category = $nbt->getString("Category"))){
-				$player->sendMessage(TF::RED.'Could not find category "'.$category.'", perhaps it has been removed.');
+				$player->sendMessage(TF::RED."Could not find category '".$category."', perhaps it has been removed.");
 			}
 		}
 		return true;

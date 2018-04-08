@@ -16,67 +16,47 @@ class Button{
 			"id" => Item::PAPER,
 			"damage" => 0,
 			"count" => 1,
-			"name" => TF::RESET.TF::GOLD.TF::BOLD.'<- Turn Left',
+			"name" => TF::RESET.TF::GOLD.TF::BOLD."<- Turn Left",
 			"lore" => [
-				TF::RESET.TF::GRAY.'Turn to left page.'
+				TF::RESET.TF::GRAY."Turn to left page."
 			]
 		],
 		"turn_right" => [
 			"id" => Item::PAPER,
 			"damage" => 0,
 			"count" => 1,
-			"name" => TF::RESET.TF::GOLD.TF::BOLD.'Turn Right ->',
+			"name" => TF::RESET.TF::GOLD.TF::BOLD."Turn Right ->",
 			"lore" => [
-				TF::RESET.TF::GRAY.'Turn to right page.'
+				TF::RESET.TF::GRAY."Turn to right page."
 			]
 		],
 		"categories" => [
 			"id" => Item::CHEST,
 			"damage" => 0,
 			"count" => 1,
-			"name" => TF::RESET.TF::YELLOW.TF::BOLD.'View Categories',
+			"name" => TF::RESET.TF::YELLOW.TF::BOLD."View Categories",
 			"lore" => [
-				TF::RESET.TF::GRAY.'Back to categories.'
+				TF::RESET.TF::GRAY."Back to categories."
 			]
 		],
 	];
 
 	public static function setOptions(array $options) : void{
-		foreach($options as $type => $option){
-			if(isset(self::$options[$type])){
-				foreach($option as $name => $value){
-					if(isset(self::$options[$type][$name]) && gettype(self::$options[$type][$name]) === gettype($value)){
-						switch($name){
-							case "name":
-								$value = TF::colorize($value);
-								break;
-							case "lore":
-								$value = array_map([TF::class, "colorize"], $value);
-								break;
-						}
-						self::$options[$type][$name] = $value;
-					}
-				}
+		self::$options = $options;
+		array_walk_recursive(self::$options, function(&$value) : void{
+			if(is_string($value)){
+				$value = TF::colorize($value);
 			}
-		}
+		});
 	}
 
 	public static function getOptions() : array{
 		$options = self::$options;
-		foreach($options as &$option){
-			foreach($option as $name => &$value){
-				switch($name){
-					case "name":
-						$value = str_replace(TF::ESCAPE, "&", $value);
-						break;
-					case "lore":
-						$value = array_map(function(string $string) : string{
-							return str_replace(TF::ESCAPE, "&", $string);
-						}, $value);
-						break;
-				}
+		array_walk_recursive($options, function(&$value) : void{
+			if(is_string($value)){
+				$value = str_replace(TF::ESCAPE, "&", $value);
 			}
-		}
+		});
 
 		return $options;
 	}
