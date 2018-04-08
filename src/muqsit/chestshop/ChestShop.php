@@ -231,17 +231,19 @@ class ChestShop extends PluginBase{
 					}
 
 					$item = $sender->getInventory()->getItemInHand();
-
 					if($item->isNull()){
 						$sender->sendMessage(TF::RED."Please hold an item in your hand.");
-					}else{
-						if(isset($args[2]) && is_numeric($args[2]) && $args[2] >= 0) {
-							$category->addItem($item, $args[2]);
-							$sender->sendMessage(TF::YELLOW."Added ".$item->getName()." to category '".$category->getName().TF::RESET.TF::YELLOW."' for \${$args[2]}.");
-						}else{
-							$sender->sendMessage(TF::RED."Please enter a valid number.");
-						}
+						return false;
 					}
+
+					if(isset($args[2]) && is_numeric($args[2]) && $args[2] >= 0) {
+						$category->addItem($item, $args[2]);
+						$sender->sendMessage(TF::YELLOW."Added ".$item->getName()." to category '".$category->getName().TF::RESET.TF::YELLOW."' for \${$args[2]}.");
+						return true;
+					}
+
+					$sender->sendMessage(TF::RED."Please enter a valid number.");
+					return false;
 				}
 				break;
 		}
