@@ -4,7 +4,7 @@ namespace muqsit\chestshop;
 use muqsit\invmenu\InvMenu;
 
 use pocketmine\item\Item;
-use pocketmine\nbt\tag\{ByteTag, CompoundTag, FloatTag, ListTag, StringTag};
+use pocketmine\nbt\tag\{CompoundTag, FloatTag, ListTag, StringTag};
 use pocketmine\Player;
 use pocketmine\utils\TextFormat as TF;
 
@@ -82,15 +82,14 @@ class Category{
 
 			$page = min(ceil(count($this->items) / 45), max(1, $page));//page > 0 and page <= number of pages.
 			$contents = array_slice($this->items, ($page - 1) * 45, 45);//get the 45 items on this page.
+
+			$contents[48] = Button::get(Button::TURN_LEFT, $this->getRealName());
+			$contents[49] = Button::get(Button::CATEGORIES);
+			$contents[50] = Button::get(Button::TURN_RIGHT, $this->getRealName());
+
 			$inventory = $this->menu->getInventory($player);
 
-			foreach($contents as $slot => $item){
-				$inventory->setItem($slot, $item, false);
-			}
-
-            $inventory->setItem(48, Button::get(Button::TURN_LEFT, $this->getRealName()));
-            $inventory->setItem(49, Button::get(Button::CATEGORIES));
-            $inventory->setItem(50, Button::get(Button::TURN_RIGHT, $this->getRealName()));
+			$inventory->setContents($contents);
 		}
 
 		if($send){
