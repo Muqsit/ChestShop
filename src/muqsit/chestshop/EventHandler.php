@@ -49,9 +49,10 @@ class EventHandler implements Listener{
 
 		if($nbt->hasTag("Button")){
 			$currentpage = $this->currentpage[$playerId = $player->getId()] ?? 1;
+            $inventoryAction->getInventory()->clearAll();//A little hack to prevent strange behaviours in mcbe 1.4+(if the second page wasn't full, items from previous page were displayed with items in the new page. Reference: https://imgur.com/a/KwOrOGi
 			switch($nbt->getByte("Button")){
 				case Button::TURN_LEFT:
-					$this->currentpage[$playerId] = $this->plugin->sendCategory($player, $category = $nbt->getString("Category"), ++$currentpage, false);
+					$this->currentpage[$playerId] = $this->plugin->sendCategory($player, $category = $nbt->getString("Category"), --$currentpage, false);
 					if($this->currentpage[$playerId] === false){
 						$player->removeWindow($inventoryAction->getInventory());
 						$player->sendMessage(TF::RED."Could not find category '".$category."', perhaps it has been removed.");

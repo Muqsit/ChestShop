@@ -24,11 +24,6 @@ class Category{
 		$this->identifier = $identifier;
 
 		$this->menu = InvMenu::create(InvMenu::TYPE_DOUBLE_CHEST);
-		$this->menu->getInventory()->setContents([
-			48 => Button::get(Button::TURN_LEFT, $this->getRealName()),
-			49 => Button::get(Button::CATEGORIES),
-			50 => Button::get(Button::TURN_RIGHT, $this->getRealName())
-		]);
 
 		$this->menu
 			->readonly()
@@ -92,6 +87,10 @@ class Category{
 			foreach($contents as $slot => $item){
 				$inventory->setItem($slot, $item, false);
 			}
+
+            $inventory->setItem(48, Button::get(Button::TURN_LEFT, $this->getRealName()));
+            $inventory->setItem(49, Button::get(Button::CATEGORIES));
+            $inventory->setItem(50, Button::get(Button::TURN_RIGHT, $this->getRealName()));
 		}
 
 		if($send){

@@ -151,7 +151,6 @@ class ChestShop extends PluginBase{
 		}
 
 		return $category->send($player, $page, $send);
-		return true;
 	}
 
 	public static function toOriginalItem(Item $item) : void{
