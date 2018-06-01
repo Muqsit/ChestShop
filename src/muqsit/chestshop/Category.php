@@ -87,9 +87,7 @@ class Category{
 			$contents[49] = Button::get(Button::CATEGORIES);
 			$contents[50] = Button::get(Button::TURN_RIGHT, $this->getRealName());
 
-			$inventory = $this->menu->getInventory($player);
-
-			$inventory->setContents($contents);
+			$this->menu->getInventory($player)->setContents($contents);
 		}
 
 		if($send){
