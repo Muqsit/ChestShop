@@ -7,7 +7,7 @@ use muqsit\invmenu\{InvMenu, InvMenuHandler};
 use pocketmine\command\{Command, CommandSender};
 use pocketmine\item\Item;
 use pocketmine\nbt\BigEndianNBTStream;
-use pocketmine\nbt\tag\{CompoundTag, FloatTag, ListTag};
+use pocketmine\nbt\tag\{CompoundTag, ListTag};
 use pocketmine\Player;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\{Config, TextFormat as TF};
@@ -82,8 +82,8 @@ class ChestShop extends PluginBase{
 		$file = $this->getDataFolder()."shops.dat";
 
 		if(is_file($file)){
-            $raw = file_get_contents($file);
-            if(!empty($raw)){
+			$raw = file_get_contents($file);
+			if(!empty($raw)){
 				$cats = (new BigEndianNBTStream())->readCompressed($raw)->getListTag("Categories");
 				foreach($cats as $tag){
 					$this->setCategory(Category::nbtDeserialize($this, $tag));
@@ -151,7 +151,6 @@ class ChestShop extends PluginBase{
 		}
 
 		return $category->send($player, $page, $send);
-		return true;
 	}
 
 	public static function toOriginalItem(Item $item) : void{
