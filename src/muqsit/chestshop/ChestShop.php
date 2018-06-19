@@ -137,7 +137,7 @@ class ChestShop extends PluginBase{
 
 	public function send(Player $player, int $delay = 0) : void{
 		if($delay > 0){
-			$this->getServer()->getScheduler()->scheduleDelayedTask(new DelayedInvMenuSendTask($this, $player, $this->menu), $delay);
+			$this->getScheduler()->scheduleDelayedTask(new DelayedInvMenuSendTask($this, $player, $this->menu), $delay);
 			return;
 		}
 
