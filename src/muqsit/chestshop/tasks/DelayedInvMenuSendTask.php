@@ -5,9 +5,9 @@ use muqsit\chestshop\ChestShop;
 use muqsit\invmenu\InvMenu;
 
 use pocketmine\Player;
-use pocketmine\scheduler\PluginTask;
+use pocketmine\scheduler\Task;
 
-class DelayedInvMenuSendTask extends PluginTask{
+class DelayedInvMenuSendTask extends Task{
 
 	/** @var Player */
 	private $player;
@@ -16,7 +16,6 @@ class DelayedInvMenuSendTask extends PluginTask{
 	private $menu;
 
 	public function __construct(ChestShop $plugin, Player $player, InvMenu $menu){
-		parent::__construct($plugin);
 		$this->player = $player;
 		$this->menu = $menu;
 	}
