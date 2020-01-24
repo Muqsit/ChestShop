@@ -23,11 +23,10 @@ class Category{
 		$this->name = $name;
 		$this->identifier = $identifier;
 
-		$this->menu = InvMenu::create(InvMenu::TYPE_DOUBLE_CHEST);
+		$this->menu = InvMenu::createSessionized(InvMenu::TYPE_DOUBLE_CHEST);
 
 		$this->menu
 			->readonly()
-			->sessionize()
 			->setName($name)
 			->setListener([$plugin->getEventHandler(), "handleTransaction"])
 			->setInventoryCloseListener([$plugin->getEventHandler(), "handlePageCacheRemoval"]);
