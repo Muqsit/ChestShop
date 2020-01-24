@@ -44,7 +44,7 @@ class EventHandler implements Listener{
 		return true;
 	}
 
-	public function handleTransaction(Player $player, Item $itemClicked, Item $itemClickedUsing, SlotChangeAction $inventoryAction) : void{
+	public function handleTransaction(Player $player, Item $itemClicked, Item $itemClickedUsing, SlotChangeAction $inventoryAction) : bool{
 		$nbt = $itemClicked->getNamedTag();
 
 		if($nbt->hasTag("Button")){
