@@ -1,0 +1,31 @@
+<?php
+
+declare(strict_types=1);
+
+namespace muqsit\chestshop\button;
+
+use muqsit\chestshop\Loader;
+use pocketmine\item\Item;
+use pocketmine\nbt\tag\CompoundTag;
+use pocketmine\utils\Config;
+
+abstract class Button{
+
+	public static function init(Loader $loader, Config $config) : void{
+	}
+
+	/**
+	 * @param Item $item
+	 * @param CompoundTag $nbt
+	 * @return Button
+	 */
+	public static function from(Item $item, CompoundTag $nbt){
+		return new static();
+	}
+
+	abstract public function getItem() : Item;
+
+	public function getNamedTag(string $name) : CompoundTag{
+		return new CompoundTag($name);
+	}
+}

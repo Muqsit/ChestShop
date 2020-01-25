@@ -1,0 +1,60 @@
+# ChestShop v5.0.0 Config
+
+# The text displayed on category buttons in /chestshop main menu.
+# Wildcards:
+#   {CATEGORY} => Name of the category
+button:
+    - "&r&l&b{CATEGORY}"
+    - "&r&7Click to view this category."
+
+# The text displayed on items being sold in categories.
+# Wildcards:
+#   {NAME} => Name of the item
+#   {COUNT} => Item count
+#   {PRICE} => Item price
+#   {PRICE_FORMATTED} => Item price (formatted)
+#   {CATEGORY| => Name of the category
+#   {PAGE} => Page number
+item-button:
+    name: "&r{NAME}"
+    lore:
+        # How to add this lore?
+        #    unshift  => Adds the lore at the beginning of the item's
+        #                lore.
+        #    push     => Adds the lore at the end of the item's lore.
+        #    override => Deletes item's current lore and sets it to
+        #                the following.
+        type: push
+        value:
+            - "&r&l&eCOST: &r&e{PRICE_FORMATTED}"
+
+# The text displayed above the inventory when browsing a category
+# Wildcards:
+#   {NAME} => Name of the category
+#   {PAGE} => Page number
+title: "{NAME}"
+
+# Whether to send player back to categories list when they close
+# the category menu.
+send-back-to-categories: false
+
+# Message sent when player purchases an item.
+# Wildcards:
+#   {PLAYER} => Name of the player
+#   {PRICE} => Price of the item
+#   {PRICE_FORMATTED} => Price of the item (formatted)
+#   {ITEM} => Name of the item
+#   {COUNT} => Item count
+purchase-message: "&aYou purchased {COUNT}x {ITEM}&r&a for {PRICE_FORMATTED}!"
+
+# Message sent when player doesn't have enough money to purchase
+# an item.
+# Wildcards:
+#   {PLAYER} => Name of the player
+#   {PRICE} => Price of the item
+#   {PRICE_FORMATTED} => Price of the item (formatted)
+#   {MONEY} => Amount of money player has
+#   {MONEY_FORMATTED} => Amount of money player has (formatted)
+#   {ITEM} => Name of the item
+#   {COUNT} => Item count
+not-enough-money-message: "&cYou don't have enough money to purchase {COUNT}x {ITEM}&r&c!"

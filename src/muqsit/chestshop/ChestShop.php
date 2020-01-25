@@ -1,263 +1,100 @@
 <?php
+
+declare(strict_types=1);
+
 namespace muqsit\chestshop;
 
-use muqsit\chestshop\tasks\DelayedInvMenuSendTask;
-use muqsit\invmenu\{InvMenu, InvMenuHandler};
-
-use pocketmine\command\{Command, CommandSender};
+use muqsit\chestshop\button\ButtonFactory;
+use muqsit\chestshop\button\ButtonIds;
+use muqsit\chestshop\button\CategoryButton;
+use muqsit\chestshop\category\Category;
+use muqsit\chestshop\database\Database;
+use muqsit\invmenu\InvMenu;
+use muqsit\invmenu\SharedInvMenu;
+use pocketmine\inventory\transaction\action\SlotChangeAction;
 use pocketmine\item\Item;
-use pocketmine\nbt\BigEndianNBTStream;
-use pocketmine\nbt\tag\{CompoundTag, ListTag};
 use pocketmine\Player;
-use pocketmine\plugin\PluginBase;
-use pocketmine\utils\{Config, TextFormat as TF};
+use pocketmine\utils\TextFormat;
 
-class ChestShop extends PluginBase{
+final class ChestShop{
 
-	/** @var EventHandler */
-	private $eventHandler;
+	/** @var Database */
+	private $database;
+
+	/** @var SharedInvMenu */
+	private $menu;
 
 	/** @var Category[] */
 	private $categories = [];
 
-	/** @var bool */
-	private $crashed = false;
-
-	/** @var InvMenu */
-	private $menu;
-
-	/** @var Config */
-	private $buttonsConfig;
-
-	public function onEnable() : void{
-		if(!is_dir($this->getDataFolder())){
-			mkdir($this->getDataFolder());
-		}
-
-		$this->saveResource("config.yml");
-		$this->saveResource("buttons.yml");
-
-		$config = $this->getConfig();
-
-		$this->eventHandler = new EventHandler($this, $config->get("double-tapping", false));
-		$this->buttonsConfig = new Config($this->getDataFolder()."buttons.yml");
-
-		$buttons = $this->getButtonsConfig()->get("buttons");
-		if(is_array($buttons)){
-			Button::setOptions($buttons);
-		}
-
-		if(!InvMenuHandler::isRegistered()){
-			InvMenuHandler::register($this);
-		}
-
-		$this->menu = InvMenu::create(InvMenu::TYPE_CHEST);
-		$this->menu
+	public function __construct(Database $database){
+		$this->database = $database;
+		$this->menu = InvMenu::create(InvMenu::TYPE_CHEST)
 			->readonly()
-			->setName("Choose A Category...")
-			->setListener([$this->eventHandler, "handleCategoryChoosing"])
-			->setInventoryCloseListener([$this->eventHandler, "handlePageCacheRemoval"]);
+			->setName("Categories")
+			->setListener(function(Player $player, Item $itemClicked, Item $itemClickedWith, SlotChangeAction $action) : void{
+				$button = ButtonFactory::fromItem($itemClicked);
+				if($button instanceof CategoryButton){
+					$category = null;
+					try{
+						$category = $this->getCategory($button->getCategory());
+					}catch(\InvalidArgumentException $e){
+						$player->sendMessage(TextFormat::RED . $e->getMessage());
+					}
 
-		try{
-			$this->loadShops();
-		}catch(\Throwable $t){
-			$this->crashed = true;//don't know if this is the best way to avoid data loss
-			throw $t;
-		}
-	}
-
-	public function onDisable() : void{
-		if(!$this->crashed){
-			$this->saveShops();
-			$this->getButtonsConfig()->set("buttons", Button::getOptions());
-			$this->getButtonsConfig()->save();
-		}
-	}
-
-	private function getButtonsConfig() : Config{
-		return $this->buttonsConfig;
-	}
-
-	private function loadShops() : void{
-		$file = $this->getDataFolder()."shops.dat";
-
-		if(is_file($file)){
-			$raw = file_get_contents($file);
-			if(!empty($raw)){
-				$cats = (new BigEndianNBTStream())->readCompressed($raw)->getListTag("Categories");
-				foreach($cats as $tag){
-					$this->setCategory(Category::nbtDeserialize($this, $tag));
+					if($category !== null && !$category->send($player)){
+						$player->sendMessage(TextFormat::RED . "This category is empty.");
+						$player->removeWindow($action->getInventory());
+					}
 				}
+			});
+	}
+
+	public function addCategory(Category $category, bool $update = true) : void{
+		if(isset($this->categories[$name = $category->getName()])){
+			throw new \InvalidArgumentException("A category with the name " . $name . " already exists.");
+		}
+
+		$this->categories[$name] = $category;
+		$this->menu->getInventory()->addItem(ButtonFactory::get(ButtonIds::CATEGORY, $category->getName(), $category->getButton()));
+
+		if($update){
+			$this->database->addCategory($category, function(int $id) use($category) : void{
+				$category->init($this->database, $id);
+			});
+		}
+	}
+
+	public function removeCategory(string $name) : void{
+		if(!isset($this->categories[$name])){
+			throw new \InvalidArgumentException("No category with the name " . $name . " exists.");
+		}
+
+		$category = $this->categories[$name];
+		unset($this->categories[$name]);
+
+		$inventory = $this->menu->getInventory();
+		$contents = $inventory->getContents();
+		foreach($contents as $slot => $item){
+			$button = ButtonFactory::fromItem($item);
+			if($button instanceof CategoryButton && $button->getCategory() === $name){
+				unset($contents[$slot]);
 			}
 		}
+
+		$inventory->setContents($contents);
+		$this->database->removeCategory($category);
 	}
 
-	private function saveShops() : void{
-		$tag = new ListTag("Categories");
-
-		foreach($this->categories as $category){
-			$tag->push($category->nbtSerialize());
+	public function getCategory(string $name) : Category{
+		if(!isset($this->categories[$name])){
+			throw new \InvalidArgumentException("No category with the name " . $name . " exists.");
 		}
 
-		file_put_contents($this->getDataFolder()."shops.dat", (new BigEndianNBTStream())->writeCompressed(new CompoundTag("", [$tag])));
+		return $this->categories[$name];
 	}
 
-	public function getEventHandler() : EventHandler{
-		return $this->eventHandler;
-	}
-
-	public function addCategory(string $name, Item $identifier) : bool{
-		if(isset($this->categories[strtolower(TF::clean($name))])){
-			return false;
-		}
-
-		$this->setCategory(new Category($this, $name, $identifier));
-		return true;
-	}
-
-	private function setCategory(Category $category) : void{
-		$this->categories[strtolower($category->getRealName())] = $category;
-		$this->menu->getInventory()->addItem($category->getIdentifier());
-	}
-
-	public function getCategory(string $category) : ?Category{
-		return $this->categories[strtolower($category)] ?? null;
-	}
-
-	public function removeCategory(string $name) : bool{
-		$category = $this->getCategory($name);
-		if($category === null){
-			return false;
-		}
-
-		unset($this->categories[strtolower(TF::clean($name))]);
-		$this->menu->getInventory()->removeItem($category->getIdentifier());
-		return true;
-	}
-
-	public function send(Player $player, int $delay = 0) : void{
-		if($delay > 0){
-			$this->getScheduler()->scheduleDelayedTask(new DelayedInvMenuSendTask($this, $player, $this->menu), $delay);
-			return;
-		}
-
+	public function send(Player $player) : void{
 		$this->menu->send($player);
-	}
-
-	public function sendCategory(Player $player, string $category, int $page = 1, bool $send = true){
-		$category = $this->getCategory($category);
-		if($category === null){
-			return false;
-		}
-
-		return $category->send($player, $page, $send);
-	}
-
-	public static function toOriginalItem(Item $item) : void{
-		$item->removeNamedTagEntry("ChestShop");
-
-		$lore = $item->getLore();
-		array_pop($lore);
-		$item->setLore($lore);
-	}
-
-	public function onCommand(CommandSender $sender, Command $cmd, string $label, array $args) : bool{
-		if(empty($args)){
-			$this->menu->send($sender);
-			return true;
-		}
-
-		switch($args[0]){
-			case "addcat":
-			case "addcategory":
-				if($sender->hasPermission("chestshop.command.admin")){
-					if(!isset($args[1])){
-						$sender->sendMessage(TF::RED."/cs addcategory <name>");
-						return false;
-					}
-
-					$item = $sender->getInventory()->getItemInHand();
-					if($item->isNull()){
-						$sender->sendMessage(TF::RED."Please hold an item in your hand. That item will be used as a button in the /{$label} GUI.");
-						return false;
-					}
-
-					if(!$this->addCategory($args[1], $item)){
-						$sender->sendMessage(TF::RED."A category named ".TF::clean($args[1])." already exists, please choose a new name.");
-						return false;
-					}
-
-					$sender->sendMessage(TF::GREEN."Successfully created category {$args[1]}, use /cs to view it.");
-					return true;
-				}
-				break;
-			case "removecat":
-			case "removecategory":
-				if($sender->hasPermission("chestshop.command.admin")){
-					if(!isset($args[1])){
-						$sender->sendMessage(TF::RED."/cs removecategory <name>");
-						return false;
-					}
-
-					if(!$this->removeCategory($args[1])){
-						$sender->sendMessage(TF::RED."No category named ".TF::clean($args[1])." could be found.");
-						return false;
-					}
-
-					$sender->sendMessage(TF::GREEN."Successfully removed category {$args[1]}.");
-					return true;
-				}
-				break;
-			case "categories":
-				if($sender->hasPermission("chestshop.command.admin")){
-					foreach($this->categories as $category){
-						$sender->sendMessage($category->getName());
-					}
-					return true;
-				}
-				break;
-			case "additem":
-				if($sender->hasPermission("chestshop.command.admin")){
-					if(!isset($args[1])){
-						$sender->sendMessage(TF::RED."/cs additem <category> <price>");
-						return false;
-					}
-
-					$category = $this->getCategory($args[1]);
-					if($category === null){
-						$sender->sendMessage(TF::RED."No category named ".TF::clean($args[1])." could be found.");
-						return false;
-					}
-
-					$item = $sender->getInventory()->getItemInHand();
-					if($item->isNull()){
-						$sender->sendMessage(TF::RED."Please hold an item in your hand.");
-						return false;
-					}
-
-					if(isset($args[2]) && is_numeric($args[2]) && $args[2] >= 0) {
-						$category->addItem($item, $args[2]);
-						$sender->sendMessage(TF::YELLOW."Added ".$item->getName()." to category '".$category->getName().TF::RESET.TF::YELLOW."' for \${$args[2]}.");
-						return true;
-					}
-
-					$sender->sendMessage(TF::RED."Please enter a valid number.");
-					return false;
-				}
-				break;
-		}
-
-		if($sender->hasPermission("chestshop.command.admin")){
-			$sender->sendMessage(
-				TF::YELLOW.TF::BOLD."ChestShop v".$this->getDescription()->getVersion().TF::RESET."\n".
-				TF::GOLD."/".$label." ".TF::GRAY."addcat/addcategory <name> - Add a category named <name> in /".$label."\n".
-				TF::GOLD."/".$label." ".TF::GRAY."removecat/removecategory <name> - Remove category <name> from /".$label."\n".
-				TF::GOLD."/".$label." ".TF::GRAY."categories - List all categories\n".
-				TF::GOLD."/".$label." ".TF::GRAY."additem <category> <price> - Add held item to <category> for <price>"
-			);
-			return true;
-		}
-
-		return false;
 	}
 }

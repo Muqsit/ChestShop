@@ -1,2 +1,22 @@
----
-...
+# ChestShop v5.0.0 Config
+turn_left:
+    id: paper
+    damage: 0
+    count: 1
+    name: "&r&l&6<- Turn Left"
+    lore:
+        - "&r&7Turn to left page."
+turn_right:
+    id: paper
+    damage: 0
+    count: 1
+    name: "&r&l&6Turn Right ->"
+    lore:
+        - "&r&7Turn to right page."
+categories:
+    id: chest
+    damage: 0
+    count: 1
+    name: "&r&l&eView Categories"
+    lore:
+        - "&r&7Back to categories."
