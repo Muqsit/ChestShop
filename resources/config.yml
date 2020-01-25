@@ -2,8 +2,12 @@
 # Whether to have players double-tap items in the GUI to purchase.
 double-tapping: false
 
-# The economy plugin the server is using.
-# If the economy plugin isn't supported by ChestShop, create an
-# issue at https://github.com/Muqsit/ChestShop/issues
-economy-plugin: EconomyAPI
+economy:
+    # The economy plugin the server is using.
+    # If the economy plugin isn't supported by ChestShop, create an
+    # issue at https://github.com/Muqsit/ChestShop/issues
+    plugin: EconomyAPI
+    # Extra configuration options for MultiEconomy plugin
+    MultiEconomy:
+        currency: "dollars"
 ...

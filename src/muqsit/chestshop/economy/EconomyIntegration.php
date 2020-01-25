@@ -8,6 +8,8 @@ use pocketmine\Player;
 
 interface EconomyIntegration{
 
+	public function __construct(array $config);
+
 	/**
 	 * Returns how much money the player has.
 	 *

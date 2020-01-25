@@ -18,16 +18,18 @@ final class EconomyManager{
 	public static function init(Loader $loader) : void{
 		self::registerDefaults();
 
-		$plugin = $loader->getConfig()->get("economy-plugin", "EconomyAPI");
+		$config = $loader->getConfig();
+		$plugin = $config->getNested("economy.plugin", "EconomyAPI");
 		if(!isset(self::$integrations[$plugin])){
 			throw new \InvalidArgumentException($loader->getName() . " does not support the economy plugin " . $plugin);
 		}
 
-		self::$integrated = new self::$integrations[$plugin]();
+		self::$integrated = new self::$integrations[$plugin]($config->getNested("economy." . $plugin, []));
 	}
 
 	private static function registerDefaults() : void{
 		self::register("EconomyAPI", EconomyAPIIntegration::class);
+		self::register("MultiEconomy", MultiEconomyIntegration::class);
 	}
 
 	private static function register(string $plugin, string $class) : void{

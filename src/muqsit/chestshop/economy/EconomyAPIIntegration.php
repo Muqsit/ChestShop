@@ -12,7 +12,7 @@ final class EconomyAPIIntegration implements EconomyIntegration{
 	/** @var EconomyAPI */
 	private $plugin;
 
-	public function __construct(){
+	public function __construct(array $config){
 		$this->plugin = EconomyAPI::getInstance();
 	}
 
