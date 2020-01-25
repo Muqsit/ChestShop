@@ -32,7 +32,7 @@ final class EconomyManager{
 		self::register("MultiEconomy", MultiEconomyIntegration::class);
 	}
 
-	private static function register(string $plugin, string $class) : void{
+	public static function register(string $plugin, string $class) : void{
 		Utils::testValidInstance($class, EconomyIntegration::class);
 		self::$integrations[$plugin] = $class;
 	}
