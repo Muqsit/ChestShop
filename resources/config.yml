@@ -1,6 +1,30 @@
 ---
-# Whether to have players double-tap items in the GUI to purchase.
-double-tapping: false
+# Wildcards:
+#   {NAME} => Name of the item
+#   {COUNT} => Item count
+#   {PRICE} => Item price
+#   {PRICE_FORMATTED} => Item price (formatted)
+#   {CATEGORY| => Name of the category
+#   {PAGE} => Page number
+confirmation-ui:
+    # Whether to launch confirmation UI when players click on an item
+    enabled: false
+    # Title of confirmation UI
+    title: "Purchase Confirmation"
+    # Body of the confirmation UI
+    body: "Are you sure you'd like to purchase {NAME} x{COUNT} for {PRICE_FORMATTED}?"
+    # Text shown on the button
+    buttons:
+        confirm:
+            text: "&l&8YES&r\n&8Proceed with purchase!"
+            icon:
+                type: "path"
+                value: ""
+        cancel:
+            text: "&l&8NO&r\n&8Take me back!"
+            icon:
+                type: "path"
+                value: ""
 
 economy:
     # The economy plugin the server is using.

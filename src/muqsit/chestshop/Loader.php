@@ -10,6 +10,7 @@ use muqsit\chestshop\category\CategoryConfig;
 use muqsit\chestshop\category\CategoryEntry;
 use muqsit\chestshop\database\Database;
 use muqsit\chestshop\economy\EconomyManager;
+use muqsit\chestshop\ui\ConfirmationUI;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\Player;
@@ -21,11 +22,19 @@ final class Loader extends PluginBase{
 	/** @var Database */
 	private $database;
 
+	/** @var ConfirmationUI|null */
+	private $confirmation_ui;
+
 	/** @var ChestShop */
 	private $chest_shop;
 
 	public function onEnable() : void{
 		$this->database = new Database($this);
+
+		if($this->getConfig()->getNested("confirmation-ui.enabled", false)){
+			$this->confirmation_ui = new ConfirmationUI($this);
+		}
+
 		$this->chest_shop = new ChestShop($this->database);
 
 		ButtonFactory::init($this);
@@ -37,6 +46,10 @@ final class Loader extends PluginBase{
 
 	public function onDisable() : void{
 		$this->database->close();
+	}
+
+	public function getConfirmationUi() : ?ConfirmationUI{
+		return $this->confirmation_ui;
 	}
 
 	public function getChestShop() : ChestShop{

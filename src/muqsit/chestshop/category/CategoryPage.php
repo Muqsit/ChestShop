@@ -49,12 +49,13 @@ final class CategoryPage{
 		$this->menu = InvMenu::create(InvMenu::TYPE_DOUBLE_CHEST)->readonly();
 		$this->category = $category;
 
+		/** @var Loader $loader */
+		$loader = Server::getInstance()->getPluginManager()->getPlugin("ChestShop");
+
 		if(CategoryConfig::getBool(CategoryConfig::BACK_TO_CATEGORIES)){
-			$this->menu->setInventoryCloseListener(static function(Player $player, Inventory $inventory) : void{
+			$this->menu->setInventoryCloseListener(static function(Player $player, Inventory $inventory) use($loader) : void{
 				static $shop = null;
 				if($shop === null){
-					/** @var Loader $loader */
-					$loader = Server::getInstance()->getPluginManager()->getPlugin("ChestShop");
 					$shop = $loader->getChestShop();
 				}
 				$shop->send($player);
@@ -67,40 +68,34 @@ final class CategoryPage{
 			50 => ButtonFactory::get(ButtonIds::TURN_RIGHT, $category->getName())
 		]);
 
-		$this->menu->setListener(function(Player $player, Item $itemClicked, Item $itemClickedWith, SlotChangeAction $action) : void{
-			$entry = null;
-			try{
-				/** @var CategoryEntry $entry */
-				$entry = $this->entries->get($action->getSlot());
-			}catch(OutOfRangeException $e){
-			}
+		$confirmation_ui = $loader->getConfirmationUi();
+		$this->menu->setListener(function(Player $player, Item $itemClicked, Item $itemClickedWith, SlotChangeAction $action) use($confirmation_ui) : void{
+			$slot = $action->getSlot();
+			$entry = $this->getPurchasableEntry($slot);
 
 			if($entry !== null){
-				$price = $entry->getPrice();
-				$economy = EconomyManager::get();
-				$money = $economy->getMoney($player);
-				if($money >= $price){
-					$economy->removeMoney($player, $price);
-					foreach($player->getInventory()->addItem($entry->getItem()) as $item){
-						$player->getLevel()->dropItem($player, $item);
-					}
-					$player->sendMessage(strtr(CategoryConfig::getString(CategoryConfig::PURCHASE_MESSAGE), [
-						"{PLAYER}" => $player->getName(),
-						"{PRICE}" => $price,
-						"{PRICE_FORMATTED}" => $economy->formatMoney($price),
-						"{ITEM}" => $entry->getItem()->getName(),
-						"{COUNT}" => $entry->getItem()->getCount(),
-					]));
+				if($confirmation_ui !== null){
+					$player->removeWindow($action->getInventory());
+					$item = $entry->getItem();
+					$confirmation_ui->send(
+						$player,
+						[
+							"{NAME}" => $item->getName(),
+							"{COUNT}" => $item->getCount(),
+							"{PRICE}" => $entry->getPrice(),
+							"{PRICE_FORMATTED}" => EconomyManager::get()->formatMoney($entry->getPrice()),
+							"{CATEGORY}" => $this->category->getName(),
+							"{PAGE}" => $this->page
+						],
+						function(Player $player, $data) use($slot, $entry) : void{
+							if($data === 0 && $this->getPurchasableEntry($slot) === $entry){
+								$this->attemptPurchase($player, $entry);
+							}
+							$this->send($player);
+						}
+					);
 				}else{
-					$player->sendMessage(strtr(CategoryConfig::getString(CategoryConfig::PURCHASE_MESSAGE), [
-						"{PLAYER}" => $player->getName(),
-						"{PRICE}" => $price,
-						"{PRICE_FORMATTED}" => $economy->formatMoney($price),
-						"{MONEY}" => $money,
-						"{MONEY_FORMATTED}" => $economy->formatMoney($money),
-						"{ITEM}" => $entry->getItem()->getName(),
-						"{COUNT}" => $entry->getItem()->getCount(),
-					]));
+					$this->attemptPurchase($player, $entry);
 				}
 			}else{
 				$button = ButtonFactory::fromItem($itemClicked);
@@ -109,6 +104,45 @@ final class CategoryPage{
 				}
 			}
 		});
+	}
+
+	private function getPurchasableEntry(int $slot) : ?CategoryEntry{
+		$entry = null;
+		try{
+			/** @var CategoryEntry $entry */
+			$entry = $this->entries->get($slot);
+		}catch(OutOfRangeException $e){
+		}
+		return $entry;
+	}
+
+	private function attemptPurchase(Player $player, CategoryEntry $entry) : void{
+		$price = $entry->getPrice();
+		$economy = EconomyManager::get();
+		$money = $economy->getMoney($player);
+		if($money >= $price){
+			$economy->removeMoney($player, $price);
+			foreach($player->getInventory()->addItem($entry->getItem()) as $item){
+				$player->getLevel()->dropItem($player, $item);
+			}
+			$player->sendMessage(strtr(CategoryConfig::getString(CategoryConfig::PURCHASE_MESSAGE), [
+				"{PLAYER}" => $player->getName(),
+				"{PRICE}" => $price,
+				"{PRICE_FORMATTED}" => $economy->formatMoney($price),
+				"{ITEM}" => $entry->getItem()->getName(),
+				"{COUNT}" => $entry->getItem()->getCount()
+			]));
+		}else{
+			$player->sendMessage(strtr(CategoryConfig::getString(CategoryConfig::PURCHASE_MESSAGE), [
+				"{PLAYER}" => $player->getName(),
+				"{PRICE}" => $price,
+				"{PRICE_FORMATTED}" => $economy->formatMoney($price),
+				"{MONEY}" => $money,
+				"{MONEY_FORMATTED}" => $economy->formatMoney($money),
+				"{ITEM}" => $entry->getItem()->getName(),
+				"{COUNT}" => $entry->getItem()->getCount()
+			]));
+		}
 	}
 
 	public function updatePageNumber(Category $category, int $page) : void{
