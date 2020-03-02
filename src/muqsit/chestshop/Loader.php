@@ -11,6 +11,7 @@ use muqsit\chestshop\category\CategoryEntry;
 use muqsit\chestshop\database\Database;
 use muqsit\chestshop\economy\EconomyManager;
 use muqsit\chestshop\ui\ConfirmationUI;
+use muqsit\invmenu\InvMenuHandler;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\Player;
@@ -29,6 +30,7 @@ final class Loader extends PluginBase{
 	private $chest_shop;
 
 	public function onEnable() : void{
+		$this->initVirions();
 		$this->database = new Database($this);
 
 		if($this->getConfig()->getNested("confirmation-ui.enabled", false)){
@@ -42,6 +44,12 @@ final class Loader extends PluginBase{
 		EconomyManager::init($this);
 
 		$this->database->load($this->chest_shop);
+	}
+
+	private function initVirions() : void{
+		if(!InvMenuHandler::isRegistered()){
+			InvMenuHandler::register($this);
+		}
 	}
 
 	public function onDisable() : void{
