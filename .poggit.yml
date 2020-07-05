@@ -6,7 +6,7 @@ projects:
     path: ""
     libs:
       - src: muqsit/InvMenu/InvMenu
-        version: 3.1.0
+        version: ^3.1.1
       - src: jojoe77777/FormAPI/libFormAPI
         version: 1.3.0
 ...
