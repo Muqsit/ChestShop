@@ -9,6 +9,12 @@ use pocketmine\utils\TextFormat;
 
 final class ConfirmationUIButton{
 
+	/**
+	 * @param array $data
+	 * @return self
+	 *
+	 * @phpstan-param array<string, mixed> $data
+	 */
 	public static function fromConfig(array $data) : self{
 		return new self(TextFormat::colorize($data["text"]), $data["icon"]["type"] ?? null, $data["icon"]["value"] ?? null);
 	}

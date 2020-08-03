@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace muqsit\chestshop\economy;
 
+use InvalidArgumentException;
 use muqsit\chestshop\Loader;
 use pocketmine\utils\Utils;
 
@@ -21,10 +22,11 @@ final class EconomyManager{
 		$config = $loader->getConfig();
 		$plugin = $config->getNested("economy.plugin", "EconomyAPI");
 		if(!isset(self::$integrations[$plugin])){
-			throw new \InvalidArgumentException($loader->getName() . " does not support the economy plugin " . $plugin);
+			throw new InvalidArgumentException("{$loader->getName()} does not support the economy plugin {$plugin}");
 		}
 
-		self::$integrated = new self::$integrations[$plugin]($config->getNested("economy." . $plugin, []));
+		self::$integrated = new self::$integrations[$plugin]();
+		self::$integrated->init($config->getNested("economy." . $plugin, []));
 	}
 
 	private static function registerDefaults() : void{
@@ -32,6 +34,12 @@ final class EconomyManager{
 		self::register("MultiEconomy", MultiEconomyIntegration::class);
 	}
 
+	/**
+	 * @param string $plugin
+	 * @param string $class
+	 *
+	 * @phpstan-param class-string<EconomyIntegration> $class
+	 */
 	public static function register(string $plugin, string $class) : void{
 		Utils::testValidInstance($class, EconomyIntegration::class);
 		self::$integrations[$plugin] = $class;

@@ -88,21 +88,21 @@ final class Loader extends PluginBase{
 								}
 								if($success){
 									$sender->sendMessage(
-										TextFormat::GREEN . "Successfully added category " . $name . TextFormat::RESET . TextFormat::GREEN . "!" . TextFormat::EOL .
-										TextFormat::GRAY . "Use " . TextFormat::GREEN . "/" . $label . " additem " . $name . " <price>" . TextFormat::GRAY . " to list the item in your hand!"
+										TextFormat::GREEN . "Successfully added category {$name}" . TextFormat::RESET . TextFormat::GREEN . "!" . TextFormat::EOL .
+										TextFormat::GRAY . "Use " . TextFormat::GREEN . "/{$label} additem {$name} <price>" . TextFormat::GRAY . " to list the item in your hand!"
 									);
 								}
 								return true;
 							}
 						}else{
-							$sender->sendMessage(TextFormat::RED . "Please hold an item in your hand. That item will be used as an icon in /" . $label . ".");
+							$sender->sendMessage(TextFormat::RED . "Please hold an item in your hand. That item will be used as an icon in /{$label}.");
 							return true;
 						}
 					}else{
 						$sender->sendMessage(TextFormat::RED . "You don't have permission to use this command.");
 						return true;
 					}
-					$sender->sendMessage(TextFormat::RED . "Usage: /" . $label . " " . $args[0] . " <name>");
+					$sender->sendMessage(TextFormat::RED . "Usage: /{$label} {$args[0]} <name>");
 					return true;
 				case "removecat":
 				case "removecategory":
@@ -117,7 +117,7 @@ final class Loader extends PluginBase{
 								$success = false;
 							}
 							if($success){
-								$sender->sendMessage(TextFormat::GREEN . "Successfully removed category " . $name . TextFormat::RESET . TextFormat::GREEN . "!");
+								$sender->sendMessage(TextFormat::GREEN . "Successfully removed category {$name}" . TextFormat::RESET . TextFormat::GREEN . "!");
 							}
 							return true;
 						}
@@ -125,7 +125,7 @@ final class Loader extends PluginBase{
 						$sender->sendMessage(TextFormat::RED . "You don't have permission to use this command.");
 						return true;
 					}
-					$sender->sendMessage(TextFormat::RED . "Usage: /" . $label . " " . $args[0] . " <name>");
+					$sender->sendMessage(TextFormat::RED . "Usage: /{$label} {$args[0]} <name>");
 					return true;
 				case "additem":
 					if($sender->hasPermission("chestshop.command.add")){
@@ -142,9 +142,9 @@ final class Loader extends PluginBase{
 									$price = (float) $args[2];
 									if($price >= 0.0){
 										$category->addEntry(new CategoryEntry($item, $price));
-										$sender->sendMessage(TextFormat::GREEN . "Added item " . $item->getName() . TextFormat::RESET . TextFormat::GREEN . " to category " . $category->getName() . "!");
+										$sender->sendMessage(TextFormat::GREEN . "Added item {$item->getName()}" . TextFormat::RESET . TextFormat::GREEN . " to category {$category->getName()}!");
 									}else{
-										$sender->sendMessage(TextFormat::RED . "Invalid price " . $args[2]);
+										$sender->sendMessage(TextFormat::RED . "Invalid price {$args[2]}");
 									}
 								}else{
 									$sender->sendMessage(TextFormat::RED . "Please hold an item in your hand that you'd like to list.");
@@ -156,7 +156,7 @@ final class Loader extends PluginBase{
 						$sender->sendMessage(TextFormat::RED . "You don't have permission to use this command.");
 						return true;
 					}
-					$sender->sendMessage(TextFormat::RED . "Usage: /" . $label . " " . $args[0] . " <category> <price>");
+					$sender->sendMessage(TextFormat::RED . "Usage: /{$label} {$args[0]} <category> <price>");
 					return true;
 				case "removeitem":
 					if($sender->hasPermission("chestshop.command.remove")){
@@ -172,9 +172,9 @@ final class Loader extends PluginBase{
 								if(!$item->isNull()){
 									$removed = $category->removeItem($item);
 									if($removed > 0){
-										$sender->sendMessage(TextFormat::GREEN . "Removed " . $removed . " item" . ($removed > 1 ? "s" : "") . " from category " . $category->getName() . "!");
+										$sender->sendMessage(TextFormat::GREEN . "Removed {$removed} item" . ($removed > 1 ? "s" : "") . " from category {$category->getName()}!");
 									}else{
-										$sender->sendMessage(TextFormat::RED . "Found no occurences of " . $item->getName() . TextFormat::RESET . TextFormat::GREEN . " in category " . $category->getName() . ".");
+										$sender->sendMessage(TextFormat::RED . "Found no occurences of {$item->getName()}" . TextFormat::RESET . TextFormat::GREEN . " in category {$category->getName()}.");
 									}
 								}else{
 									$sender->sendMessage(TextFormat::RED . "Please hold an item in your hand that you'd like to list.");
@@ -186,7 +186,7 @@ final class Loader extends PluginBase{
 						$sender->sendMessage(TextFormat::RED . "You don't have permission to use this command.");
 						return true;
 					}
-					$sender->sendMessage(TextFormat::RED . "Usage: /" . $label . " " . $args[0] . " <category> <price>");
+					$sender->sendMessage(TextFormat::RED . "Usage: /{$label} {$args[0]} <category> <price>");
 					return true;
 			}
 		}

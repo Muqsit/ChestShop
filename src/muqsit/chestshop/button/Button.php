@@ -17,11 +17,9 @@ abstract class Button{
 	/**
 	 * @param Item $item
 	 * @param CompoundTag $nbt
-	 * @return Button
+	 * @return static
 	 */
-	public static function from(Item $item, CompoundTag $nbt){
-		return new static();
-	}
+	abstract public static function from(Item $item, CompoundTag $nbt);
 
 	abstract public function getItem() : Item;
 

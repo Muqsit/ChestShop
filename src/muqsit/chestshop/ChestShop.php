@@ -51,7 +51,7 @@ final class ChestShop{
 
 	public function addCategory(Category $category, bool $update = true) : void{
 		if(isset($this->categories[$name = $category->getName()])){
-			throw new \InvalidArgumentException("A category with the name " . $name . " already exists.");
+			throw new \InvalidArgumentException("A category with the name {$name} already exists.");
 		}
 
 		$this->categories[$name] = $category;
@@ -66,7 +66,7 @@ final class ChestShop{
 
 	public function removeCategory(string $name) : void{
 		if(!isset($this->categories[$name])){
-			throw new \InvalidArgumentException("No category with the name " . $name . " exists.");
+			throw new \InvalidArgumentException("No category with the name {$name} exists.");
 		}
 
 		$category = $this->categories[$name];
@@ -87,7 +87,7 @@ final class ChestShop{
 
 	public function getCategory(string $name) : Category{
 		if(!isset($this->categories[$name])){
-			throw new \InvalidArgumentException("No category with the name " . $name . " exists.");
+			throw new \InvalidArgumentException("No category with the name {$name} exists.");
 		}
 
 		return $this->categories[$name];

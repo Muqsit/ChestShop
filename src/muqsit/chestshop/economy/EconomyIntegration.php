@@ -8,7 +8,12 @@ use pocketmine\Player;
 
 interface EconomyIntegration{
 
-	public function __construct(array $config);
+	/**
+	 * @param array $config
+	 *
+	 * @phpstan-param array<string, mixed> $config
+	 */
+	public function init(array $config) : void;
 
 	/**
 	 * Returns how much money the player has.

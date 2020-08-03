@@ -25,7 +25,7 @@ final class Database{
 
 		$config = new Config($loader->getDataFolder() . "database.yml", Config::YAML);
 		if(strtolower($config->getNested("database.type")) === "mysql"){
-			throw new \InvalidArgumentException($loader->getName() . " currently doesn't support MySQL.");
+			throw new \InvalidArgumentException("{$loader->getName()} currently doesn't support MySQL.");
 		}
 
 		$this->connector = libasynql::create($loader, $config->get("database"), ["sqlite" => "db/sqlite.sql", "mysql" => "db/mysql.sql"]);

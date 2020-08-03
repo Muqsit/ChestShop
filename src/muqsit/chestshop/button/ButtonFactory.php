@@ -16,10 +16,16 @@ final class ButtonFactory{
 	private const TAG_ID = "id";
 	private const TAG_DATA = "data";
 
-	/** @var Button[]|string[] */
+	/**
+	 * @var Button[]|string[]
+	 * @phpstan-var array<string, class-string<Button>>
+	 */
 	private static $buttons = [];
 
-	/** @var string[] */
+	/**
+	 * @var string[]
+	 * @phpstan-var array<class-string<Button>, string>
+	 */
 	private static $identifiers = [];
 
 	public static function init(Loader $loader) : void{
@@ -32,9 +38,20 @@ final class ButtonFactory{
 		self::register($loader, $config, ButtonIds::CATEGORIES, CategoriesButton::class);
 	}
 
+	/**
+	 * @param Loader $loader
+	 * @param Config $config
+	 * @param string $identifier
+	 * @param string $class
+	 *
+	 * @phpstan-param class-string<Button> $class
+	 */
 	public static function register(Loader $loader, Config $config, string $identifier, string $class) : void{
 		Utils::testValidInstance($class, Button::class);
-		/** @var Button|string $class */
+		/**
+		 * @var Button|string $class
+		 * @phpstan-var class-string<Button>
+		 */
 
 		self::$buttons[$identifier] = $class;
 		self::$identifiers[$class] = $identifier;
@@ -52,6 +69,11 @@ final class ButtonFactory{
 		return $item;
 	}
 
+	/**
+	 * @param string $identifier
+	 * @param mixed ...$args
+	 * @return Item
+	 */
 	public static function get(string $identifier, ...$args) : Item{
 		return self::toItem(new self::$buttons[$identifier](...$args));
 	}

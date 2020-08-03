@@ -12,12 +12,17 @@ final class EconomyAPIIntegration implements EconomyIntegration{
 	/** @var EconomyAPI */
 	private $plugin;
 
-	public function __construct(array $config){
+	public function __construct(){
 		$this->plugin = EconomyAPI::getInstance();
 	}
 
+	public function init(array $config) : void{
+	}
+
 	public function getMoney(Player $player) : float{
-		return $this->plugin->myMoney($player);
+		$money = $this->plugin->myMoney($player);
+		assert(is_float($money));
+		return $money;
 	}
 
 	public function addMoney(Player $player, float $money) : void{

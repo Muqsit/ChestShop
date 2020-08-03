@@ -8,6 +8,7 @@ use muqsit\chestshop\category\Category;
 use muqsit\chestshop\ChestShop;
 use muqsit\chestshop\Loader;
 use pocketmine\item\Item;
+use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\Player;
 use pocketmine\utils\Config;
 
@@ -22,6 +23,10 @@ class CategoriesButton extends Button implements CategoryNavigationButton{
 	public static function init(Loader $loader, Config $config) : void{
 		self::$shop = $loader->getChestShop();
 		self::$item = ButtonUtils::itemFromConfig($config->get("categories"));
+	}
+
+	public static function from(Item $item, CompoundTag $nbt) : self{
+		return new self();
 	}
 
 	public function getItem() : Item{

@@ -32,6 +32,13 @@ final class ConfirmationUI{
 		$this->button_cancel = ConfirmationUIButton::fromConfig($config["buttons"]["cancel"]);
 	}
 
+	/**
+	 * @param Player $player
+	 * @param string[] $wildcards
+	 * @param Closure $callback
+	 *
+	 * @phpstan-param array<string, string> $wildcards
+	 */
 	public function send(Player $player, array $wildcards, Closure $callback) : void{
 		$form = new SimpleForm($callback);
 		$form->setTitle(strtr($this->title, $wildcards));

@@ -14,12 +14,12 @@ final class MultiEconomyIntegration implements EconomyIntegration{
 	/** @var Currency */
 	private $currency;
 
-	public function __construct(array $config){
+	public function init(array $config) : void{
 		/** @var MultiEconomy $plugin */
 		$plugin = Server::getInstance()->getPluginManager()->getPlugin("MultiEconomy");
 		$this->currency = $plugin->getCurrency($config["currency"]);
 		if($this->currency === null){
-			throw new \InvalidArgumentException("Invalid currency " . $config["currency"]);
+			throw new \InvalidArgumentException("Invalid currency {$config["currency"]}");
 		}
 	}
 

@@ -12,14 +12,14 @@ abstract class TurnButton extends Button implements CategoryNavigationButton{
 
 	private const TAG_CATEGORY = "Category";
 
-	public static function from(Item $item, CompoundTag $nbt){
+	final public static function from(Item $item, CompoundTag $nbt) : TurnButton{
 		return new static($nbt->getString(self::TAG_CATEGORY));
 	}
 
 	/** @var string */
 	private $category;
 
-	public function __construct(string $category){
+	final public function __construct(string $category){
 		$this->category = $category;
 	}
 

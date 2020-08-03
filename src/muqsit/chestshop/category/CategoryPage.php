@@ -39,6 +39,9 @@ final class CategoryPage{
 	/** @var int */
 	private $page;
 
+	/**
+	 * @param CategoryEntry[] $entries
+	 */
 	public function __construct(array $entries = []){
 		$this->entries = new Set($entries);
 	}
@@ -92,11 +95,11 @@ final class CategoryPage{
 
 					$wildcards = [
 						"{NAME}" => $item->getName(),
-						"{COUNT}" => $item->getCount(),
-						"{PRICE}" => $entry->getPrice(),
+						"{COUNT}" => (string) $item->getCount(),
+						"{PRICE}" => (string) $entry->getPrice(),
 						"{PRICE_FORMATTED}" => EconomyManager::get()->formatMoney($entry->getPrice()),
 						"{CATEGORY}" => $this->category->getName(),
-						"{PAGE}" => $this->page
+						"{PAGE}" => (string) $this->page
 					];
 
 					$callback = function(Player $player, $data) use($slot, $entry) : void{
@@ -175,7 +178,7 @@ final class CategoryPage{
 		}
 
 		$slot = $this->entries->count();
-		$this->entries[] = $entry;
+		$this->entries->add($entry);
 
 		$item = clone $entry->getItem();
 
@@ -230,7 +233,7 @@ final class CategoryPage{
 
 	public function removeSlot(int $slot) : void{
 		$this->menu->getInventory()->clear($slot);
-		$this->entries->remove($slot);
+		$this->entries->remove($this->entries->get($slot));
 		$this->database->removeFromCategory($this->category, $this->getOffset() + $slot);
 	}
 

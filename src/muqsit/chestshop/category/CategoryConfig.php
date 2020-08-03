@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace muqsit\chestshop\category;
 
+use InvalidArgumentException;
 use muqsit\chestshop\Loader;
 use pocketmine\utils\Config;
 use pocketmine\utils\TextFormat;
@@ -40,9 +41,13 @@ final class CategoryConfig{
 		return self::$properties[$property];
 	}
 
+	/**
+	 * @param string $property
+	 * @param mixed $value
+	 */
 	private static function setString(string $property, $value) : void{
 		if(!is_string($value)){
-			throw new \InvalidArgumentException("Invalid value for property " . $property . " in category.yml");
+			throw new InvalidArgumentException("Invalid value for property {$property} in category.yml");
 		}
 
 		self::$properties[$property] = TextFormat::colorize($value);
@@ -52,21 +57,33 @@ final class CategoryConfig{
 		return self::$properties[$property];
 	}
 
+	/**
+	 * @param string $property
+	 * @param mixed $value
+	 */
 	private static function setBool(string $property, $value) : void{
 		if(!is_bool($value)){
-			throw new \InvalidArgumentException("Invalid value for property " . $property . " in category.yml");
+			throw new InvalidArgumentException("Invalid value for property {$property} in category.yml");
 		}
 
 		self::$properties[$property] = $value;
 	}
 
+	/**
+	 * @param string $property
+	 * @return string[]
+	 */
 	public static function getStringList(string $property) : array{
 		return self::$properties[$property];
 	}
 
+	/**
+	 * @param string $property
+	 * @param mixed $value
+	 */
 	private static function setStringList(string $property, $value) : void{
 		if(!is_array($value)){
-			throw new \InvalidArgumentException("Invalid value for property " . $property . " in category.yml");
+			throw new InvalidArgumentException("Invalid value for property {$property} in category.yml");
 		}
 
 		self::$properties[$property] = array_map(TextFormat::class . "::colorize", $value);
