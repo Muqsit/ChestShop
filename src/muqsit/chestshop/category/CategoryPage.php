@@ -152,7 +152,7 @@ final class CategoryPage{
 				"{COUNT}" => $entry->getItem()->getCount()
 			]));
 		}else{
-			$player->sendMessage(strtr(CategoryConfig::getString(CategoryConfig::PURCHASE_MESSAGE), [
+			$player->sendMessage(strtr(CategoryConfig::getString(CategoryConfig::NOT_ENOUGH_MONEY_MESSAGE), [
 				"{PLAYER}" => $player->getName(),
 				"{PRICE}" => $price,
 				"{PRICE_FORMATTED}" => $economy->formatMoney($price),
