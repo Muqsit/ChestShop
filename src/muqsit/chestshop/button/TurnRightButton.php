@@ -24,6 +24,8 @@ class TurnRightButton extends TurnButton{
 	}
 
 	public function navigate(Player $player, Category $category, int $current_page) : void{
-		$category->send($player, $current_page + 1);
+		if(!$category->send($player, $current_page + 1)){
+			$category->send($player);
+		}
 	}
 }

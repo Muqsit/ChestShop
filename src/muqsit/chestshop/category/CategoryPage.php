@@ -12,10 +12,9 @@ use muqsit\chestshop\database\Database;
 use muqsit\chestshop\economy\EconomyManager;
 use muqsit\chestshop\Loader;
 use muqsit\invmenu\InvMenu;
-use muqsit\invmenu\SharedInvMenu;
+use muqsit\invmenu\transaction\DeterministicInvMenuTransaction;
 use OutOfRangeException;
 use pocketmine\inventory\Inventory;
-use pocketmine\inventory\transaction\action\SlotChangeAction;
 use pocketmine\item\Item;
 use pocketmine\Player;
 use pocketmine\Server;
@@ -28,7 +27,7 @@ final class CategoryPage{
 	/** @var Database */
 	private $database;
 
-	/** @var SharedInvMenu */
+	/** @var InvMenu */
 	private $menu;
 
 	/** @var Category */
@@ -44,9 +43,20 @@ final class CategoryPage{
 		$this->entries = new Set($entries);
 	}
 
+	/**
+	 * @return Set<CategoryEntry>
+	 */
+	public function getEntries(){
+		return $this->entries;
+	}
+
+	public function getPage() : int{
+		return $this->page;
+	}
+
 	public function init(Database $database, Category $category) : void{
 		$this->database = $database;
-		$this->menu = InvMenu::create(InvMenu::TYPE_DOUBLE_CHEST)->readonly();
+		$this->menu = InvMenu::create(InvMenu::TYPE_DOUBLE_CHEST);
 		$this->category = $category;
 
 		/** @var Loader $loader */
@@ -69,41 +79,47 @@ final class CategoryPage{
 		]);
 
 		$confirmation_ui = $loader->getConfirmationUi();
-		$this->menu->setListener(function(Player $player, Item $itemClicked, Item $itemClickedWith, SlotChangeAction $action) use($confirmation_ui) : void{
+		$this->menu->setListener(InvMenu::readonly(function(DeterministicInvMenuTransaction $transaction) use($confirmation_ui) : void{
+			$player = $transaction->getPlayer();
+			$action = $transaction->getAction();
+
 			$slot = $action->getSlot();
 			$entry = $this->getPurchasableEntry($slot);
 
 			if($entry !== null){
 				if($confirmation_ui !== null){
-					$player->removeWindow($action->getInventory());
 					$item = $entry->getItem();
-					$confirmation_ui->send(
-						$player,
-						[
-							"{NAME}" => $item->getName(),
-							"{COUNT}" => $item->getCount(),
-							"{PRICE}" => $entry->getPrice(),
-							"{PRICE_FORMATTED}" => EconomyManager::get()->formatMoney($entry->getPrice()),
-							"{CATEGORY}" => $this->category->getName(),
-							"{PAGE}" => $this->page
-						],
-						function(Player $player, $data) use($slot, $entry) : void{
-							if($data === 0 && $this->getPurchasableEntry($slot) === $entry){
-								$this->attemptPurchase($player, $entry);
-							}
-							$this->send($player);
+
+					$wildcards = [
+						"{NAME}" => $item->getName(),
+						"{COUNT}" => $item->getCount(),
+						"{PRICE}" => $entry->getPrice(),
+						"{PRICE_FORMATTED}" => EconomyManager::get()->formatMoney($entry->getPrice()),
+						"{CATEGORY}" => $this->category->getName(),
+						"{PAGE}" => $this->page
+					];
+
+					$callback = function(Player $player, $data) use($slot, $entry) : void{
+						if($data === 0 && $this->getPurchasableEntry($slot) === $entry){
+							$this->attemptPurchase($player, $entry);
 						}
-					);
+						$this->send($player);
+					};
+
+					$player->removeWindow($action->getInventory());
+					$transaction->then(static function(Player $player) use($confirmation_ui, $wildcards, $callback) : void{
+						$confirmation_ui->send($player, $wildcards, $callback);
+					});
 				}else{
 					$this->attemptPurchase($player, $entry);
 				}
 			}else{
-				$button = ButtonFactory::fromItem($itemClicked);
+				$button = ButtonFactory::fromItem($transaction->getItemClicked());
 				if($button instanceof CategoryNavigationButton){
 					$button->navigate($player, $this->category, $this->page);
 				}
 			}
-		});
+		}));
 	}
 
 	private function getPurchasableEntry(int $slot) : ?CategoryEntry{

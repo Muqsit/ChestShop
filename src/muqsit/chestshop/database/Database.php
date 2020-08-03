@@ -42,17 +42,18 @@ final class Database{
 	public function load(ChestShop $shop) : void{
 		$this->connector->executeSelect(DatabaseStmts::LOAD_CATEGORIES, [], function(array $rows) use($shop) : void{
 			foreach($rows as ["id" => $id, "name" => $name, "button" => $button]){
-				$category = new Category($name, ItemSerializer::unserialize(hex2bin($button)));
+				$category = new Category($name, ItemSerializer::unserialize($button));
 				$category->init($this, $id);
 				$this->connector->executeSelect(DatabaseStmts::LOAD_CATEGORY_CONTENTS, ["category_id" => $category->getId()], function(array $rows2) use($shop, $category) : void{
 					$slots = [];
 					foreach($rows2 as ["slot" => $slot, "item" => $item, "price" => $price]){
-						$slots[$slot] = new CategoryEntry(ItemSerializer::unserialize(hex2bin($item)), $price);
+						$slots[$slot] = new CategoryEntry(ItemSerializer::unserialize($item), $price);
 					}
 					ksort($slots);
 					foreach($slots as $entry){
 						$category->addEntry($entry, false);
 					}
+
 					$shop->addCategory($category, false);
 				});
 			}

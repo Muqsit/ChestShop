@@ -10,9 +10,7 @@ use muqsit\chestshop\button\CategoryButton;
 use muqsit\chestshop\category\Category;
 use muqsit\chestshop\database\Database;
 use muqsit\invmenu\InvMenu;
-use muqsit\invmenu\SharedInvMenu;
-use pocketmine\inventory\transaction\action\SlotChangeAction;
-use pocketmine\item\Item;
+use muqsit\invmenu\transaction\DeterministicInvMenuTransaction;
 use pocketmine\Player;
 use pocketmine\utils\TextFormat;
 
@@ -21,7 +19,7 @@ final class ChestShop{
 	/** @var Database */
 	private $database;
 
-	/** @var SharedInvMenu */
+	/** @var InvMenu */
 	private $menu;
 
 	/** @var Category[] */
@@ -30,24 +28,25 @@ final class ChestShop{
 	public function __construct(Database $database){
 		$this->database = $database;
 		$this->menu = InvMenu::create(InvMenu::TYPE_CHEST)
-			->readonly()
 			->setName("Categories")
-			->setListener(function(Player $player, Item $itemClicked, Item $itemClickedWith, SlotChangeAction $action) : void{
-				$button = ButtonFactory::fromItem($itemClicked);
+			->setListener(InvMenu::readonly(function(DeterministicInvMenuTransaction $transaction) : void{
+				$button = ButtonFactory::fromItem($transaction->getItemClicked());
 				if($button instanceof CategoryButton){
+					$player = $transaction->getPlayer();
 					$category = null;
 					try{
 						$category = $this->getCategory($button->getCategory());
 					}catch(\InvalidArgumentException $e){
 						$player->sendMessage(TextFormat::RED . $e->getMessage());
+						return;
 					}
 
-					if($category !== null && !$category->send($player)){
+					if(!$category->send($player)){
+						$player->removeWindow($transaction->getAction()->getInventory());
 						$player->sendMessage(TextFormat::RED . "This category is empty.");
-						$player->removeWindow($action->getInventory());
 					}
 				}
-			});
+			}));
 	}
 
 	public function addCategory(Category $category, bool $update = true) : void{
@@ -92,6 +91,13 @@ final class ChestShop{
 		}
 
 		return $this->categories[$name];
+	}
+
+	/**
+	 * @return Category[]
+	 */
+	public function getCategories() : array{
+		return $this->categories;
 	}
 
 	public function send(Player $player) : void{

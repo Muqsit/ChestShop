@@ -52,8 +52,7 @@ final class Category{
 	}
 
 	public function send(Player $player, int $page = 1) : bool{
-		if($this->pages->count() >= $page){
-			/** @noinspection PhpUndefinedMethodInspection */
+		if($page > 0 && $page <= $this->pages->count()){
 			/** @noinspection NullPointerExceptionInspection */
 			$this->pages->get($page - 1)->send($player);
 			return true;
@@ -91,7 +90,13 @@ final class Category{
 
 	public function getPage(int $page) : ?CategoryPage{
 		/** @noinspection ProperNullCoalescingOperatorUsageInspection */
-		/** @noinspection PhpIncompatibleReturnTypeInspection */
 		return $this->pages->get($page - 1) ?? null;
+	}
+
+	/**
+	 * @return Set<CategoryPage>
+	 */
+	public function getPages(){
+		return $this->pages;
 	}
 }

@@ -22,12 +22,12 @@ CREATE TABLE IF NOT EXISTS category_contents(
 -- #  }
 
 -- #  { load_categories
-SELECT id, name, HEX(button) AS button FROM categories;
+SELECT id, name, button FROM categories;
 -- #  }
 
 -- #  { load_category_contents
 -- #    :category_id int
-SELECT slot, HEX(item) AS item, price FROM category_contents WHERE category_id=:category_id;
+SELECT slot, item, price FROM category_contents WHERE category_id=:category_id;
 -- #  }
 
 -- #  { add_category

@@ -24,8 +24,8 @@ class TurnLeftButton extends TurnButton{
 	}
 
 	public function navigate(Player $player, Category $category, int $current_page) : void{
-		if($current_page - 1 > 0){
-			$category->send($player, $current_page - 1);
+		if(!$category->send($player, $current_page - 1)){
+			$category->send($player, $category->getPages()->count());
 		}
 	}
 }
