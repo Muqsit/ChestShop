@@ -1,7 +1,7 @@
 name: ChestShop
 main: muqsit\chestshop\Loader
 api: 3.11.1
-version: 5.0.0
+version: 5.1.0
 commands:
   chestshop:
     aliases: ["cs", "cshop"]
