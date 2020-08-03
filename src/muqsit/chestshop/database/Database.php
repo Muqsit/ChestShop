@@ -75,6 +75,10 @@ final class Database{
 		$this->connector->executeInsert(DatabaseStmts::REMOVE_CATEGORY, ["id" => $category->getId()]);
 	}
 
+	public function removeCategoryContents(Category $category) : void{
+		$this->connector->executeInsert(DatabaseStmts::REMOVE_CATEGORY_CONTENTS, ["category_id" => $category->getId()]);
+	}
+
 	public function addToCategory(Category $category, int $index, CategoryEntry $entry) : void{
 		$this->connector->executeInsert(DatabaseStmts::ADD_CATEGORY_CONTENT, [
 			"category_id" => $category->getId(),

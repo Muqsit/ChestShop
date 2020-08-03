@@ -10,3 +10,5 @@ permissions:
     default: op
   chestshop.command.remove:
     default: op
+  chestshop.command.help:
+    default: op

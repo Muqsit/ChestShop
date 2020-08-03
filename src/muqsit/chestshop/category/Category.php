@@ -74,16 +74,32 @@ final class Category{
 		}
 	}
 
+	public function rebuildPages() : void{
+		$entries = [];
+		foreach($this->pages as $page){
+			array_push($entries, ...$page->getEntries()->toArray());
+		}
+
+		foreach($this->pages as $page){
+			$page->onDelete();
+		}
+		$this->pages->clear();
+
+		$this->database->removeCategoryContents($this);
+		foreach($entries as $entry){
+			$this->addEntry($entry);
+		}
+	}
+
 	public function removeItem(Item $item) : int{
 		$removed = 0;
 		foreach($this->pages as $page){
 			if($page->removeItem($item)){
-				if($page->isEmpty()){
-					$this->pages->remove($page);
-					$page->onDelete();
-				}
 				++$removed;
 			}
+		}
+		if($removed > 0){
+			$this->rebuildPages();
 		}
 		return $removed;
 	}

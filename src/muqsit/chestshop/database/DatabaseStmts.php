@@ -19,4 +19,5 @@ interface DatabaseStmts{
 
 	public const REMOVE_CATEGORY = self::PREFIX . "remove_category";
 	public const REMOVE_CATEGORY_CONTENT = self::PREFIX . "remove_category_content";
+	public const REMOVE_CATEGORY_CONTENTS = self::PREFIX . "remove_category_contents";
 }

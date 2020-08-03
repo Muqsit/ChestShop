@@ -214,16 +214,12 @@ final class CategoryPage{
 	}
 
 	public function removeItem(Item $item) : bool{
-		$inventory = $this->menu->getInventory();
-		$contents = $inventory->getContents();
-		for($slot = $inventory->getSize() - 1; $slot >= 0; --$slot){
-			if(isset($contents[$slot]) && $contents[$slot] === $item){
+		foreach($this->entries as $slot => $entry){
+			if($entry->getItem()->equals($item)){
 				$this->removeSlot($slot);
-				$inventory->setContents(array_values($contents));
 				return true;
 			}
 		}
-
 		return false;
 	}
 
@@ -232,9 +228,11 @@ final class CategoryPage{
 	}
 
 	public function removeSlot(int $slot) : void{
-		$this->menu->getInventory()->clear($slot);
 		$this->entries->remove($this->entries->get($slot));
-		$this->database->removeFromCategory($this->category, $this->getOffset() + $slot);
+		$inventory = $this->menu->getInventory();
+		for($item_slot = $slot + 1; $item_slot < self::MAX_ENTRIES_PER_PAGE; ++$item_slot){
+			$inventory->setItem($item_slot - 1, $inventory->getItem($item_slot));
+		}
 	}
 
 	public function send(Player $player) : void{

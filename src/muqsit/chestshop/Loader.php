@@ -174,7 +174,7 @@ final class Loader extends PluginBase{
 									if($removed > 0){
 										$sender->sendMessage(TextFormat::GREEN . "Removed {$removed} item" . ($removed > 1 ? "s" : "") . " from category {$category->getName()}!");
 									}else{
-										$sender->sendMessage(TextFormat::RED . "Found no occurences of {$item->getName()}" . TextFormat::RESET . TextFormat::GREEN . " in category {$category->getName()}.");
+										$sender->sendMessage(TextFormat::RED . "Found no occurrences of {$item->getName()}" . TextFormat::RESET . TextFormat::RED . " in category {$category->getName()}.");
 									}
 								}else{
 									$sender->sendMessage(TextFormat::RED . "Please hold an item in your hand that you'd like to list.");
@@ -186,7 +186,21 @@ final class Loader extends PluginBase{
 						$sender->sendMessage(TextFormat::RED . "You don't have permission to use this command.");
 						return true;
 					}
-					$sender->sendMessage(TextFormat::RED . "Usage: /{$label} {$args[0]} <category> <price>");
+					$sender->sendMessage(TextFormat::RED . "Usage: /{$label} {$args[0]} <category>");
+					return true;
+				case "help":
+					if($sender->hasPermission("chestshop.command.remove")){
+						$sender->sendMessage(
+							TextFormat::BOLD . TextFormat::GOLD . "ChestShop Commands" . TextFormat::RESET . TextFormat::EOL .
+							TextFormat::YELLOW . "/{$label} addcategory <name>" . TextFormat::GRAY . " - Add a new shop category." . TextFormat::EOL .
+							TextFormat::YELLOW . "/{$label} removecategory <name>" . TextFormat::GRAY . " - Remove a shop category." . TextFormat::EOL .
+							TextFormat::YELLOW . "/{$label} additem <category> <price>" . TextFormat::GRAY . " - Add the item in your hand to a category." . TextFormat::EOL .
+							TextFormat::YELLOW . "/{$label} removeitem <category>" . TextFormat::GRAY . " - Remove the item in your hand from a category."
+						);
+					}else{
+						$sender->sendMessage(TextFormat::RED . "You don't have permission to use this command.");
+						return true;
+					}
 					return true;
 			}
 		}

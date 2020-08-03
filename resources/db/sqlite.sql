@@ -54,4 +54,9 @@ INSERT OR REPLACE INTO category_contents(category_id, slot, item, price) VALUES(
 -- #    :slot int
 DELETE FROM category_contents WHERE category_id=:category_id AND slot=:slot;
 -- #  }
+
+-- #  { remove_category_contents
+-- #    :category_id int
+DELETE FROM category_contents WHERE category_id=:category_id;
+-- #  }
 -- #}
