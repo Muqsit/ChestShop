@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace muqsit\chestshop\category;
 
-use Ds\Set;
 use muqsit\chestshop\database\Database;
-use OverflowException;
 use pocketmine\item\Item;
 use pocketmine\Player;
-use UnderflowException;
 
 final class Category{
 
@@ -25,13 +22,12 @@ final class Category{
 	/** @var Item */
 	private $button;
 
-	/** @var Set<CategoryPage>|CategoryPage[] */
-	private $pages;
+	/** @var array<int, CategoryPage>|CategoryPage[] */
+	private $pages = [];
 
 	public function __construct(string $name, Item $button){
 		$this->name = $name;
 		$this->button = $button;
-		$this->pages = new Set();
 	}
 
 	public function init(Database $database, int $id) : void{
@@ -52,26 +48,22 @@ final class Category{
 	}
 
 	public function send(Player $player, int $page = 1) : bool{
-		if($page > 0 && $page <= $this->pages->count()){
-			/** @noinspection NullPointerExceptionInspection */
-			$this->pages->get($page - 1)->send($player);
+		if($page > 0 && $page <= count($this->pages)){
+			$this->pages[$page - 1]->send($player);
 			return true;
 		}
 		return false;
 	}
 
 	public function addEntry(CategoryEntry $entry, bool $update = true) : void{
-		try{
-			/** @var CategoryPage $page */
-			$page = $this->pages->last();
-			$page->addEntry($entry, $update);
-		}catch(OverflowException | UnderflowException $e){
+		$page = $this->pages[count($this->pages) - 1] ?? null;
+		if($page === null){
 			$page = new CategoryPage();
 			$page->init($this->database, $this);
-			$this->pages->add($page);
-			$page->updatePageNumber($this, $this->pages->count());
-			$page->addEntry($entry, $update);
+			$this->pages[] = $page;
+			$page->updatePageNumber($this, count($this->pages));
 		}
+		$page->addEntry($entry, $update);
 	}
 
 	public function rebuildPages() : void{
@@ -83,7 +75,7 @@ final class Category{
 		foreach($this->pages as $page){
 			$page->onDelete();
 		}
-		$this->pages->clear();
+		$this->pages = [];
 
 		$this->database->removeCategoryContents($this);
 		foreach($entries as $entry){
@@ -105,14 +97,13 @@ final class Category{
 	}
 
 	public function getPage(int $page) : ?CategoryPage{
-		/** @noinspection ProperNullCoalescingOperatorUsageInspection */
-		return $this->pages->get($page - 1) ?? null;
+		return $this->pages[$page - 1] ?? null;
 	}
 
 	/**
-	 * @return Set<CategoryPage>
+	 * @return array<int, CategoryPage>
 	 */
-	public function getPages(){
+	public function getPages() : array{
 		return $this->pages;
 	}
 }

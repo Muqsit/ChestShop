@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace muqsit\chestshop\category;
 
-use Ds\Set;
 use muqsit\chestshop\button\ButtonFactory;
 use muqsit\chestshop\button\ButtonIds;
 use muqsit\chestshop\button\CategoryNavigationButton;
@@ -33,8 +32,8 @@ final class CategoryPage{
 	/** @var Category */
 	private $category;
 
-	/** @var Set<CategoryEntry>|CategoryEntry[] */
-	private $entries;
+	/** @var array<int, CategoryEntry>|CategoryEntry[] */
+	private $entries = [];
 
 	/** @var int */
 	private $page;
@@ -43,13 +42,15 @@ final class CategoryPage{
 	 * @param CategoryEntry[] $entries
 	 */
 	public function __construct(array $entries = []){
-		$this->entries = new Set($entries);
+		foreach($entries as $entry){
+			$this->entries[] = $entry;
+		}
 	}
 
 	/**
-	 * @return Set<CategoryEntry>
+	 * @return array<int, CategoryEntry>
 	 */
-	public function getEntries(){
+	public function getEntries() : array{
 		return $this->entries;
 	}
 
@@ -126,13 +127,7 @@ final class CategoryPage{
 	}
 
 	private function getPurchasableEntry(int $slot) : ?CategoryEntry{
-		$entry = null;
-		try{
-			/** @var CategoryEntry $entry */
-			$entry = $this->entries->get($slot);
-		}catch(OutOfRangeException $e){
-		}
-		return $entry;
+		return $this->entries[$slot] ?? null;
 	}
 
 	private function attemptPurchase(Player $player, CategoryEntry $entry) : void{
