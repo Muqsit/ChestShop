@@ -12,7 +12,6 @@ use muqsit\chestshop\economy\EconomyManager;
 use muqsit\chestshop\Loader;
 use muqsit\invmenu\InvMenu;
 use muqsit\invmenu\transaction\DeterministicInvMenuTransaction;
-use OutOfRangeException;
 use pocketmine\inventory\Inventory;
 use pocketmine\item\Item;
 use pocketmine\Player;
@@ -172,8 +171,8 @@ final class CategoryPage{
 			throw new \OverflowException("Cannot add more than " . self::MAX_ENTRIES_PER_PAGE . " entries to a page.");
 		}
 
-		$slot = $this->entries->count();
-		$this->entries->add($entry);
+		$slot = count($this->entries);
+		$this->entries[] = $entry;
 
 		$item = clone $entry->getItem();
 
@@ -223,7 +222,9 @@ final class CategoryPage{
 	}
 
 	public function removeSlot(int $slot) : void{
-		$this->entries->remove($this->entries->get($slot));
+		unset($this->entries[$slot]);
+		$this->entries = array_values($this->entries);
+
 		$inventory = $this->menu->getInventory();
 		for($item_slot = $slot + 1; $item_slot < self::MAX_ENTRIES_PER_PAGE; ++$item_slot){
 			$inventory->setItem($item_slot - 1, $inventory->getItem($item_slot));

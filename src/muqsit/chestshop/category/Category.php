@@ -69,7 +69,7 @@ final class Category{
 	public function rebuildPages() : void{
 		$entries = [];
 		foreach($this->pages as $page){
-			array_push($entries, ...$page->getEntries()->toArray());
+			array_push($entries, ...$page->getEntries());
 		}
 
 		foreach($this->pages as $page){
