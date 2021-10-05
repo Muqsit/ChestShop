@@ -31,7 +31,7 @@ final class Category{
 	public function __construct(string $name, Item $button){
 		$this->name = $name;
 		$this->button = $button;
-		$this->pages = new Set();
+		$this->pages = new Ds\Set();
 	}
 
 	public function init(Database $database, int $id) : void{
