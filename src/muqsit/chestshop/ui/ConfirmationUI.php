@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace muqsit\chestshop\ui;
 
 use Closure;
-use jojoe77777\FormAPI\SimpleForm;
+use dktapps\pmforms\FormIcon;
+use dktapps\pmforms\MenuForm;
+use dktapps\pmforms\MenuOption;
 use muqsit\chestshop\Loader;
 use pocketmine\player\Player;
 use pocketmine\utils\TextFormat;
@@ -33,13 +35,10 @@ final class ConfirmationUI{
 	 * @phpstan-param array<string, string> $wildcards
 	 */
 	public function send(Player $player, array $wildcards, Closure $callback) : void{
-		$form = new SimpleForm($callback);
-		$form->setTitle(strtr($this->title, $wildcards));
-		$form->setContent(strtr($this->body, $wildcards));
-		$form->addButton(strtr($this->button_confirm->getText(), $wildcards), $this->button_confirm->getIconType(), $this->button_confirm->getIconValue());
+		$options = [new MenuOption(strtr($this->button_confirm->getText(), $wildcards), new FormIcon($this->button_confirm->getIconValue(), $this->button_confirm->getIconType()))];
 		if($this->button_cancel->isValid()){
-			$form->addButton(strtr($this->button_cancel->getText(), $wildcards), $this->button_cancel->getIconType(), $this->button_cancel->getIconValue());
+			$options[] = new MenuOption(strtr($this->button_cancel->getText(), $wildcards), new FormIcon($this->button_cancel->getIconValue(), $this->button_cancel->getIconType()));
 		}
-		$player->sendForm($form);
+		$player->sendForm(new MenuForm(strtr($this->title, $wildcards), strtr($this->body, $wildcards), $options, $callback));
 	}
 }
