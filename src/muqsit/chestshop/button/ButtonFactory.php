@@ -48,11 +48,11 @@ final class ButtonFactory{
 	 */
 	public static function register(Loader $loader, Config $config, string $identifier, string $class) : void{
 		Utils::testValidInstance($class, Button::class);
+
 		/**
 		 * @var Button|string $class
-		 * @phpstan-var class-string<Button>
+		 * @phpstan-var class-string<Button> $class
 		 */
-
 		self::$buttons[$identifier] = $class;
 		self::$identifiers[$class] = $identifier;
 		$class::init($loader, $config);
@@ -60,12 +60,10 @@ final class ButtonFactory{
 
 	private static function toItem(Button $button) : Item{
 		$item = $button->getItem();
-
-		$tag = new CompoundTag(self::TAG_BUTTON);
-		$tag->setString(self::TAG_ID, self::$identifiers[get_class($button)]);
-		$tag->setTag($button->getNamedTag(self::TAG_DATA));
-		$item->setNamedTagEntry($tag);
-
+		$item->getNamedTag()->setTag(self::TAG_BUTTON, CompoundTag::create()
+			->setString(self::TAG_ID, self::$identifiers[$button::class])
+			->setTag(self::TAG_DATA, $button->getNamedTag())
+		);
 		return $item;
 	}
 
@@ -79,8 +77,7 @@ final class ButtonFactory{
 	}
 
 	public static function fromItem(Item $item) : ?Button{
-		$tag = $item->getNamedTagEntry(self::TAG_BUTTON);
-		/** @var CompoundTag|null $tag */
+		$tag = $item->getNamedTag()->getCompoundTag(self::TAG_BUTTON);
 		return $tag !== null ? self::$buttons[$tag->getString(self::TAG_ID)]::from($item, $tag->getCompoundTag(self::TAG_DATA)) : null;
 	}
 }

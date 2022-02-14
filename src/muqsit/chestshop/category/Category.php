@@ -6,29 +6,20 @@ namespace muqsit\chestshop\category;
 
 use muqsit\chestshop\database\Database;
 use pocketmine\item\Item;
-use pocketmine\Player;
+use pocketmine\player\Player;
 
 final class Category{
 
-	/** @var Database */
-	private $database;
-
-	/** @var string */
-	private $name;
-
-	/** @var int */
-	private $id;
-
-	/** @var Item */
-	private $button;
+	private Database $database;
+	private int $id;
 
 	/** @var array<int, CategoryPage>|CategoryPage[] */
 	private $pages = [];
 
-	public function __construct(string $name, Item $button){
-		$this->name = $name;
-		$this->button = $button;
-	}
+	public function __construct(
+		private string $name,
+		private Item $button
+	){}
 
 	public function init(Database $database, int $id) : void{
 		$this->database = $database;

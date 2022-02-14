@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace muqsit\chestshop\ui;
 
+use InvalidArgumentException;
 use jojoe77777\FormAPI\SimpleForm;
 use pocketmine\utils\TextFormat;
+use function strtolower;
 
 final class ConfirmationUIButton{
 
@@ -19,26 +21,18 @@ final class ConfirmationUIButton{
 		return new self(TextFormat::colorize($data["text"]), $data["icon"]["type"] ?? null, $data["icon"]["value"] ?? null);
 	}
 
-	/** @var string */
-	private $text;
-
-	/** @var int|null */
-	private $icon_type;
-
-	/** @var string|null */
-	private $icon_value;
+	private string $text;
+	private ?int $icon_type;
+	private ?string $icon_value;
 
 	public function __construct(string $text, ?string $icon_type, ?string $icon_value){
 		$this->text = $text;
 		$this->icon_value = $icon_value;
-		switch(strtolower($icon_type)){
-			case "path":
-				$this->icon_type = SimpleForm::IMAGE_TYPE_PATH;
-				break;
-			case "url":
-				$this->icon_type = SimpleForm::IMAGE_TYPE_URL;
-				break;
-		}
+		$this->icon_type = match(strtolower($icon_type)){
+			"path" => SimpleForm::IMAGE_TYPE_PATH,
+			"url" => SimpleForm::IMAGE_TYPE_URL,
+			default => throw new InvalidArgumentException("Invalid icon type: {$icon_type}")
+		};
 	}
 
 	public function isValid() : bool{

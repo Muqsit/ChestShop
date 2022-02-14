@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace muqsit\chestshop\economy;
 
-use pocketmine\Player;
+use pocketmine\player\Player;
 use pocketmine\Server;
 use twisted\multieconomy\Currency;
 use twisted\multieconomy\MultiEconomy;
 
 final class MultiEconomyIntegration implements EconomyIntegration{
 
-	/** @var Currency */
-	private $currency;
+	private Currency $currency;
 
 	public function init(array $config) : void{
 		/** @var MultiEconomy $plugin */

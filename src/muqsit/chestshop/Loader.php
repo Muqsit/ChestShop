@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace muqsit\chestshop;
 
+use InvalidArgumentException;
 use muqsit\chestshop\button\ButtonFactory;
 use muqsit\chestshop\category\Category;
 use muqsit\chestshop\category\CategoryConfig;
@@ -14,29 +15,21 @@ use muqsit\chestshop\ui\ConfirmationUI;
 use muqsit\invmenu\InvMenuHandler;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
-use pocketmine\Player;
+use pocketmine\player\Player;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\TextFormat;
 
 final class Loader extends PluginBase{
 
-	/** @var Database */
-	private $database;
+	private Database $database;
+	private ?ConfirmationUI $confirmation_ui;
+	private ChestShop $chest_shop;
 
-	/** @var ConfirmationUI|null */
-	private $confirmation_ui;
-
-	/** @var ChestShop */
-	private $chest_shop;
-
-	public function onEnable() : void{
+	protected function onEnable() : void{
 		$this->initVirions();
+
 		$this->database = new Database($this);
-
-		if($this->getConfig()->getNested("confirmation-ui.enabled", false)){
-			$this->confirmation_ui = new ConfirmationUI($this);
-		}
-
+		$this->confirmation_ui = $this->getConfig()->getNested("confirmation-ui.enabled", false) ? new ConfirmationUI($this) : null;
 		$this->chest_shop = new ChestShop($this->database);
 
 		ButtonFactory::init($this);
@@ -52,7 +45,7 @@ final class Loader extends PluginBase{
 		}
 	}
 
-	public function onDisable() : void{
+	protected function onDisable() : void{
 		$this->database->close();
 	}
 
@@ -82,7 +75,7 @@ final class Loader extends PluginBase{
 								$success = true;
 								try{
 									$this->chest_shop->addCategory(new Category($name, $button));
-								}catch(\InvalidArgumentException $e){
+								}catch(InvalidArgumentException $e){
 									$sender->sendMessage(TextFormat::RED . $e->getMessage());
 									$success = false;
 								}
@@ -112,7 +105,7 @@ final class Loader extends PluginBase{
 							$success = true;
 							try{
 								$this->chest_shop->removeCategory($name);
-							}catch(\InvalidArgumentException $e){
+							}catch(InvalidArgumentException $e){
 								$sender->sendMessage(TextFormat::RED . $e->getMessage());
 								$success = false;
 							}
@@ -133,7 +126,7 @@ final class Loader extends PluginBase{
 							$category = null;
 							try{
 								$category = $this->chest_shop->getCategory($args[1]);
-							}catch(\InvalidArgumentException $e){
+							}catch(InvalidArgumentException $e){
 								$sender->sendMessage(TextFormat::RED . $e->getMessage());
 							}
 							if($category !== null){
@@ -164,7 +157,7 @@ final class Loader extends PluginBase{
 							$category = null;
 							try{
 								$category = $this->chest_shop->getCategory($args[1]);
-							}catch(\InvalidArgumentException $e){
+							}catch(InvalidArgumentException $e){
 								$sender->sendMessage(TextFormat::RED . $e->getMessage());
 							}
 							if($category !== null){

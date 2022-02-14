@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace muqsit\chestshop\economy;
 
-use pocketmine\Player;
+use pocketmine\player\Player;
 
 interface EconomyIntegration{
 

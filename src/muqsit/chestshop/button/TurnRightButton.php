@@ -7,13 +7,12 @@ namespace muqsit\chestshop\button;
 use muqsit\chestshop\category\Category;
 use muqsit\chestshop\Loader;
 use pocketmine\item\Item;
-use pocketmine\Player;
+use pocketmine\player\Player;
 use pocketmine\utils\Config;
 
 class TurnRightButton extends TurnButton{
 
-	/** @var Item */
-	private static $item;
+	private static Item $item;
 
 	public static function init(Loader $loader, Config $config) : void{
 		self::$item = ButtonUtils::itemFromConfig($config->get("turn_right"));

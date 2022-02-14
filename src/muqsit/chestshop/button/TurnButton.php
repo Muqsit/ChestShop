@@ -6,7 +6,6 @@ namespace muqsit\chestshop\button;
 
 use pocketmine\item\Item;
 use pocketmine\nbt\tag\CompoundTag;
-use pocketmine\Player;
 
 abstract class TurnButton extends Button implements CategoryNavigationButton{
 
@@ -16,20 +15,15 @@ abstract class TurnButton extends Button implements CategoryNavigationButton{
 		return new static($nbt->getString(self::TAG_CATEGORY));
 	}
 
-	/** @var string */
-	private $category;
-
-	final public function __construct(string $category){
-		$this->category = $category;
-	}
+	final public function __construct(
+		private string $category
+	){}
 
 	public function getCategory() : string{
 		return $this->category;
 	}
 
-	public function getNamedTag(string $name) : CompoundTag{
-		$tag = parent::getNamedTag($name);
-		$tag->setString(self::TAG_CATEGORY, $this->category);
-		return $tag;
+	public function getNamedTag() : CompoundTag{
+		return parent::getNamedTag()->setString(self::TAG_CATEGORY, $this->category);
 	}
 }

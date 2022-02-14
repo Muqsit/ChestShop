@@ -7,7 +7,6 @@ namespace muqsit\chestshop\button;
 use muqsit\chestshop\category\CategoryConfig;
 use pocketmine\item\Item;
 use pocketmine\nbt\tag\CompoundTag;
-use pocketmine\Player;
 
 class CategoryButton extends Button{
 
@@ -18,16 +17,10 @@ class CategoryButton extends Button{
 		return new CategoryButton($nbt->getString(self::TAG_CATEGORY), Item::nbtDeserialize($nbt->getCompoundTag(self::TAG_ITEM)));
 	}
 
-	/** @var string */
-	private $category;
-
-	/** @var Item */
-	private $item;
-
-	public function __construct(string $category, Item $item){
-		$this->category = $category;
-		$this->item = $item;
-	}
+	public function __construct(
+		private string $category,
+		private Item $item
+	){}
 
 	public function getCategory() : string{
 		return $this->category;
@@ -40,10 +33,9 @@ class CategoryButton extends Button{
 			->setLore(str_replace("{CATEGORY}", $this->category, $display));
 	}
 
-	public function getNamedTag(string $name) : CompoundTag{
-		$tag = parent::getNamedTag($name);
-		$tag->setString(self::TAG_CATEGORY, $this->category);
-		$tag->setTag($this->item->nbtSerialize(-1, self::TAG_ITEM));
-		return $tag;
+	public function getNamedTag() : CompoundTag{
+		return parent::getNamedTag()
+			->setString(self::TAG_CATEGORY, $this->category)
+			->setTag(self::TAG_ITEM, $this->item->nbtSerialize());
 	}
 }

@@ -23,7 +23,7 @@ abstract class Button{
 
 	abstract public function getItem() : Item;
 
-	public function getNamedTag(string $name) : CompoundTag{
-		return new CompoundTag($name);
+	public function getNamedTag() : CompoundTag{
+		return new CompoundTag();
 	}
 }

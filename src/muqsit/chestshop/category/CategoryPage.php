@@ -12,9 +12,10 @@ use muqsit\chestshop\economy\EconomyManager;
 use muqsit\chestshop\Loader;
 use muqsit\invmenu\InvMenu;
 use muqsit\invmenu\transaction\DeterministicInvMenuTransaction;
+use OverflowException;
 use pocketmine\inventory\Inventory;
 use pocketmine\item\Item;
-use pocketmine\Player;
+use pocketmine\player\Player;
 use pocketmine\Server;
 use pocketmine\utils\TextFormat;
 
@@ -22,20 +23,13 @@ final class CategoryPage{
 
 	public const MAX_ENTRIES_PER_PAGE = 45;
 
-	/** @var Database */
-	private $database;
-
-	/** @var InvMenu */
-	private $menu;
-
-	/** @var Category */
-	private $category;
+	private Database $database;
+	private InvMenu $menu;
+	private Category $category;
+	private int $page;
 
 	/** @var array<int, CategoryEntry>|CategoryEntry[] */
-	private $entries = [];
-
-	/** @var int */
-	private $page;
+	private array $entries = [];
 
 	/**
 	 * @param CategoryEntry[] $entries
@@ -109,7 +103,7 @@ final class CategoryPage{
 						$this->send($player);
 					};
 
-					$player->removeWindow($action->getInventory());
+					$player->removeCurrentWindow();
 					$transaction->then(static function(Player $player) use($confirmation_ui, $wildcards, $callback) : void{
 						$confirmation_ui->send($player, $wildcards, $callback);
 					});
@@ -136,7 +130,8 @@ final class CategoryPage{
 		if($money >= $price){
 			$economy->removeMoney($player, $price);
 			foreach($player->getInventory()->addItem($entry->getItem()) as $item){
-				$player->getLevel()->dropItem($player, $item);
+				$pos = $player->getPosition();
+				$pos->getWorld()->dropItem($pos, $item);
 			}
 			$player->sendMessage(strtr(CategoryConfig::getString(CategoryConfig::PURCHASE_MESSAGE), [
 				"{PLAYER}" => $player->getName(),
@@ -168,7 +163,7 @@ final class CategoryPage{
 
 	public function addEntry(CategoryEntry $entry, bool $update) : void{
 		if(count($this->entries) === self::MAX_ENTRIES_PER_PAGE){
-			throw new \OverflowException("Cannot add more than " . self::MAX_ENTRIES_PER_PAGE . " entries to a page.");
+			throw new OverflowException("Cannot add more than " . self::MAX_ENTRIES_PER_PAGE . " entries to a page.");
 		}
 
 		$slot = count($this->entries);
@@ -239,7 +234,7 @@ final class CategoryPage{
 		$inventory = $this->menu->getInventory();
 		foreach($inventory->getViewers() as $viewer){
 			$viewer->sendMessage(TextFormat::GRAY . "The page you were viewing is no longer available.");
+			$viewer->removeCurrentWindow();
 		}
-		$inventory->removeAllViewers();
 	}
 }

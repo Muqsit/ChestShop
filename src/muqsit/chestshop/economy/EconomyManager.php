@@ -10,11 +10,14 @@ use pocketmine\utils\Utils;
 
 final class EconomyManager{
 
-	/** @var string[] */
-	private static $integrations = [];
+	/**
+	 * @var string[]
+	 *
+	 * @phpstan-var array<class-string<EconomyIntegration>>
+	 */
+	private static array $integrations = [];
 
-	/** @var EconomyIntegration */
-	private static $integrated;
+	private static EconomyIntegration $integrated;
 
 	public static function init(Loader $loader) : void{
 		self::registerDefaults();

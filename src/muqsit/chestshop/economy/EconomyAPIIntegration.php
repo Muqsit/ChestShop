@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace muqsit\chestshop\economy;
 
 use onebone\economyapi\EconomyAPI;
-use pocketmine\Player;
+use pocketmine\player\Player;
 
 final class EconomyAPIIntegration implements EconomyIntegration{
 
-	/** @var EconomyAPI */
-	private $plugin;
+	private EconomyAPI $plugin;
 
 	public function __construct(){
 		$this->plugin = EconomyAPI::getInstance();

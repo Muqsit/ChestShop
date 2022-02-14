@@ -1,12 +1,15 @@
 name: ChestShop
 main: muqsit\chestshop\Loader
-api: 3.11.1
-version: 5.1.2
+api: 4.0.0
+version: 5.2.0
 softdepend: [EconomyAPI, MultiEconomy]
 commands:
   chestshop:
     aliases: ["cs", "cshop"]
+    permission: chestshop.command
 permissions:
+  chestshop.command:
+    default: true
   chestshop.command.add:
     default: op
   chestshop.command.remove:

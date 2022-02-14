@@ -15,8 +15,7 @@ use poggit\libasynql\libasynql;
 
 final class Database{
 
-	/** @var DataConnector */
-	private $connector;
+	private DataConnector $connector;
 
 	public function __construct(Loader $loader){
 		ItemSerializer::init();

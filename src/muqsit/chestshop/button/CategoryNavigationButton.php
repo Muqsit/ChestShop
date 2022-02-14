@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace muqsit\chestshop\button;
 
 use muqsit\chestshop\category\Category;
-use pocketmine\Player;
+use pocketmine\player\Player;
 
 interface CategoryNavigationButton{
 

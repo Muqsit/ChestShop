@@ -7,22 +7,15 @@ namespace muqsit\chestshop\ui;
 use Closure;
 use jojoe77777\FormAPI\SimpleForm;
 use muqsit\chestshop\Loader;
-use pocketmine\Player;
+use pocketmine\player\Player;
 use pocketmine\utils\TextFormat;
 
 final class ConfirmationUI{
 
-	/** @var string */
-	private $title;
-
-	/** @var string */
-	private $body;
-
-	/** @var ConfirmationUIButton */
-	private $button_confirm;
-
-	/** @var ConfirmationUIButton */
-	private $button_cancel;
+	private string $title;
+	private string $body;
+	private ConfirmationUIButton $button_confirm;
+	private ConfirmationUIButton $button_cancel;
 
 	public function __construct(Loader $loader){
 		$config = $loader->getConfig()->get("confirmation-ui");

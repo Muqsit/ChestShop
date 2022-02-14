@@ -6,7 +6,9 @@ namespace muqsit\chestshop\button;
 
 use InvalidArgumentException;
 use pocketmine\item\Item;
-use pocketmine\item\ItemFactory;
+use pocketmine\item\LegacyStringToItemParser;
+use pocketmine\item\LegacyStringToItemParserException;
+use pocketmine\item\StringToItemParser;
 use pocketmine\utils\TextFormat;
 
 final class ButtonUtils{
@@ -18,9 +20,11 @@ final class ButtonUtils{
 	public static function itemFromConfig(array $config) : Item{
 		["id" => $id, "damage" => $damage, "count" => $count, "name" => $name, "lore" => $lore] = $config;
 
-		$item = ItemFactory::fromString("{$id}:{$damage}");
-		if(!($item instanceof Item)){
-			throw new InvalidArgumentException("Invalid item string supplied: {$id}:{$damage}");
+		$identifier = "{$id}:{$damage}"; // TODO: Support raw identifiers
+		try{
+			$item = StringToItemParser::getInstance()->parse($identifier) ?? LegacyStringToItemParser::getInstance()->parse($identifier);
+		}catch(LegacyStringToItemParserException $e){
+			throw new InvalidArgumentException("Invalid item string supplied: {$id}:{$damage}", $e->getCode(), $e);
 		}
 
 		return $item
