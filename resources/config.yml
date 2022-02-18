@@ -28,10 +28,11 @@ confirmation-ui:
 
 economy:
     # The economy plugin the server is using.
+    # Economy plugins currently supported: BedrockEconomy, EconomyAPI
     # If the economy plugin isn't supported by ChestShop, create an
     # issue at https://github.com/Muqsit/ChestShop/issues
     plugin: EconomyAPI
-    # Extra configuration options for MultiEconomy plugin
-    MultiEconomy:
-        currency: "dollars"
+    # Extra configuration options if BedrockEconomy plugin is chosen
+    BedrockEconomy:
+        unsafe-warn: true
 ...

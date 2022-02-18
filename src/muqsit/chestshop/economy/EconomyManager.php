@@ -33,6 +33,7 @@ final class EconomyManager{
 	}
 
 	private static function registerDefaults() : void{
+		self::register("BedrockEconomy", BedrockEconomyIntegration::class);
 		self::register("EconomyAPI", EconomyAPIIntegration::class);
 	}
 
