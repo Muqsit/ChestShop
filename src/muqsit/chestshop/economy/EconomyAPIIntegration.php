@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace muqsit\chestshop\economy;
 
+use Closure;
+use muqsit\chestshop\util\PlayerIdentity;
 use onebone\economyapi\EconomyAPI;
-use pocketmine\player\Player;
 
 final class EconomyAPIIntegration implements EconomyIntegration{
 
@@ -18,18 +19,18 @@ final class EconomyAPIIntegration implements EconomyIntegration{
 	public function init(array $config) : void{
 	}
 
-	public function getMoney(Player $player) : float{
-		$money = $this->plugin->myMoney($player);
+	public function getMoney(PlayerIdentity $player, Closure $callback) : void{
+		$money = $this->plugin->myMoney($player->getGamertag());
 		assert(is_float($money));
-		return $money;
+		$callback($money);
 	}
 
-	public function addMoney(Player $player, float $money) : void{
-		$this->plugin->addMoney($player, $money);
+	public function addMoney(PlayerIdentity $player, float $money) : void{
+		$this->plugin->addMoney($player->getGamertag(), $money);
 	}
 
-	public function removeMoney(Player $player, float $money) : void{
-		$this->plugin->reduceMoney($player, $money);
+	public function removeMoney(PlayerIdentity $player, float $money, Closure $callback) : void{
+		$callback($this->plugin->reduceMoney($player->getGamertag(), $money) === EconomyAPI::RET_SUCCESS);
 	}
 
 	public function formatMoney(float $money) : string{

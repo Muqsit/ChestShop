@@ -10,6 +10,8 @@ use muqsit\chestshop\button\CategoryNavigationButton;
 use muqsit\chestshop\database\Database;
 use muqsit\chestshop\economy\EconomyManager;
 use muqsit\chestshop\Loader;
+use muqsit\chestshop\util\PlayerIdentity;
+use muqsit\chestshop\util\WeakPlayer;
 use muqsit\invmenu\InvMenu;
 use muqsit\invmenu\transaction\DeterministicInvMenuTransaction;
 use OverflowException;
@@ -124,33 +126,44 @@ final class CategoryPage{
 	}
 
 	private function attemptPurchase(Player $player, CategoryEntry $entry) : void{
-		$price = $entry->getPrice();
+		$identity = PlayerIdentity::fromPlayer($player);
+		$_player = WeakPlayer::fromPlayer($player);
 		$economy = EconomyManager::get();
-		$money = $economy->getMoney($player);
-		if($money >= $price){
-			$economy->removeMoney($player, $price);
-			foreach($player->getInventory()->addItem($entry->getItem()) as $item){
-				$pos = $player->getPosition();
-				$pos->getWorld()->dropItem($pos, $item);
+		$economy->removeMoney($identity, $entry->getPrice(), static function(bool $success) use($identity, $_player, $economy, $entry) : void{
+			$player = $_player->get();
+			if($success){
+				if($player === null){
+					$economy->addMoney($identity, $entry->getPrice());
+				}else{
+					$pos = $player->getPosition();
+					foreach($player->getInventory()->addItem($entry->getItem()) as $item){
+						$pos->getWorld()->dropItem($pos, $item);
+					}
+					$player->sendMessage(strtr(CategoryConfig::getString(CategoryConfig::PURCHASE_MESSAGE), [
+						"{PLAYER}" => $player->getName(),
+						"{PRICE}" => $entry->getPrice(),
+						"{PRICE_FORMATTED}" => $economy->formatMoney($entry->getPrice()),
+						"{ITEM}" => $entry->getItem()->getName(),
+						"{COUNT}" => $entry->getItem()->getCount()
+					]));
+				}
+			}elseif($player !== null){
+				$economy->getMoney($identity, static function(float $money) use($_player, $economy, $entry) : void{
+					$player = $_player->get();
+					if($player !== null){
+						$player->sendMessage(strtr(CategoryConfig::getString(CategoryConfig::NOT_ENOUGH_MONEY_MESSAGE), [
+							"{PLAYER}" => $player->getName(),
+							"{PRICE}" => $entry->getPrice(),
+							"{PRICE_FORMATTED}" => $economy->formatMoney($entry->getPrice()),
+							"{MONEY}" => $money,
+							"{MONEY_FORMATTED}" => $economy->formatMoney($money),
+							"{ITEM}" => $entry->getItem()->getName(),
+							"{COUNT}" => $entry->getItem()->getCount()
+						]));
+					}
+				});
 			}
-			$player->sendMessage(strtr(CategoryConfig::getString(CategoryConfig::PURCHASE_MESSAGE), [
-				"{PLAYER}" => $player->getName(),
-				"{PRICE}" => $price,
-				"{PRICE_FORMATTED}" => $economy->formatMoney($price),
-				"{ITEM}" => $entry->getItem()->getName(),
-				"{COUNT}" => $entry->getItem()->getCount()
-			]));
-		}else{
-			$player->sendMessage(strtr(CategoryConfig::getString(CategoryConfig::NOT_ENOUGH_MONEY_MESSAGE), [
-				"{PLAYER}" => $player->getName(),
-				"{PRICE}" => $price,
-				"{PRICE_FORMATTED}" => $economy->formatMoney($price),
-				"{MONEY}" => $money,
-				"{MONEY_FORMATTED}" => $economy->formatMoney($money),
-				"{ITEM}" => $entry->getItem()->getName(),
-				"{COUNT}" => $entry->getItem()->getCount()
-			]));
-		}
+		});
 	}
 
 	public function updatePageNumber(Category $category, int $page) : void{

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace muqsit\chestshop\economy;
 
-use pocketmine\player\Player;
+use Closure;
+use muqsit\chestshop\util\PlayerIdentity;
 
 interface EconomyIntegration{
 
@@ -18,26 +19,30 @@ interface EconomyIntegration{
 	/**
 	 * Returns how much money the player has.
 	 *
-	 * @param Player $player
-	 * @return float
+	 * @param PlayerIdentity $player
+	 * @param Closure $callback
+	 *
+	 * @phpstan-param Closure(float) : void $callback
 	 */
-	public function getMoney(Player $player) : float;
+	public function getMoney(PlayerIdentity $player, Closure $callback) : void;
 
 	/**
 	 * Adds a given amount of money to the player.
 	 *
-	 * @param Player $player
+	 * @param PlayerIdentity $player
 	 * @param float $money
 	 */
-	public function addMoney(Player $player, float $money) : void;
+	public function addMoney(PlayerIdentity $player, float $money) : void;
 
 	/**
 	 * Removes a given amount of money from the player.
 	 *
-	 * @param Player $player
-	 * @param float $money
+	 * @param PlayerIdentity $player
+	 * @param Closure $callback
+	 *
+	 * @phpstan-param Closure(bool) : void $callback
 	 */
-	public function removeMoney(Player $player, float $money) : void;
+	public function removeMoney(PlayerIdentity $player, float $money, Closure $callback) : void;
 
 	/**
 	 * Formats money.
