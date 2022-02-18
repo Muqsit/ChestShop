@@ -34,7 +34,6 @@ final class EconomyManager{
 
 	private static function registerDefaults() : void{
 		self::register("EconomyAPI", EconomyAPIIntegration::class);
-		self::register("MultiEconomy", MultiEconomyIntegration::class);
 	}
 
 	/**
