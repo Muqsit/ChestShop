@@ -2,7 +2,7 @@ name: ChestShop
 main: muqsit\chestshop\Loader
 api: 4.0.0
 version: 5.3.2
-softdepend: [EconomyAPI, MultiEconomy]
+softdepend: [EconomyAPI, BedrockEconomy]
 commands:
   chestshop:
     aliases: ["cs", "cshop"]
