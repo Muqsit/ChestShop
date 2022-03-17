@@ -29,19 +29,24 @@ final class ChestShop{
 		$this->menu->setName("Categories");
 		$this->menu->setListener(InvMenu::readonly(function(DeterministicInvMenuTransaction $transaction) : void{
 			$button = ButtonFactory::fromItem($transaction->getItemClicked());
-			if($button instanceof CategoryButton){
-				$player = $transaction->getPlayer();
-				try{
-					$category = $this->getCategory($button->getCategory());
-				}catch(InvalidArgumentException $e){
-					$player->sendMessage(TextFormat::RED . $e->getMessage());
-					return;
-				}
-				if(!$category->send($player)){
-					$player->removeCurrentWindow();
-					$player->sendMessage(TextFormat::RED . "This category is empty.");
-				}
+			if(!($button instanceof CategoryButton)){
+				return;
 			}
+
+			$player = $transaction->getPlayer();
+			try{
+				$category = $this->getCategory($button->getCategory());
+			}catch(InvalidArgumentException $e){
+				$player->sendMessage(TextFormat::RED . $e->getMessage());
+				return;
+			}
+
+			if($category->send($player)){
+				return;
+			}
+
+			$player->removeCurrentWindow();
+			$player->sendMessage(TextFormat::RED . "This category is empty.");
 		}));
 	}
 
