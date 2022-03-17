@@ -20,13 +20,13 @@ final class ButtonFactory{
 	 * @var Button[]|string[]
 	 * @phpstan-var array<string, class-string<Button>>
 	 */
-	private static $buttons = [];
+	private static array $buttons = [];
 
 	/**
 	 * @var string[]
 	 * @phpstan-var array<class-string<Button>, string>
 	 */
-	private static $identifiers = [];
+	private static array $identifiers = [];
 
 	public static function init(Loader $loader) : void{
 		$loader->saveResource("buttons.yml");
@@ -67,12 +67,7 @@ final class ButtonFactory{
 		return $item;
 	}
 
-	/**
-	 * @param string $identifier
-	 * @param mixed ...$args
-	 * @return Item
-	 */
-	public static function get(string $identifier, ...$args) : Item{
+	public static function get(string $identifier, mixed ...$args) : Item{
 		return self::toItem(new self::$buttons[$identifier](...$args));
 	}
 

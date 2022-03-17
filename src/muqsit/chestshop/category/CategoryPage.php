@@ -63,11 +63,7 @@ final class CategoryPage{
 
 		if(CategoryConfig::getBool(CategoryConfig::BACK_TO_CATEGORIES)){
 			$this->menu->setInventoryCloseListener(static function(Player $player, Inventory $inventory) use($loader) : void{
-				static $shop = null;
-				if($shop === null){
-					$shop = $loader->getChestShop();
-				}
-				$shop->send($player);
+				$loader->getChestShop()->send($player);
 			});
 		}
 

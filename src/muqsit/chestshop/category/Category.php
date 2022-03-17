@@ -14,7 +14,7 @@ final class Category{
 	private int $id;
 
 	/** @var array<int, CategoryPage>|CategoryPage[] */
-	private $pages = [];
+	private array $pages = [];
 
 	public function __construct(
 		private string $name,

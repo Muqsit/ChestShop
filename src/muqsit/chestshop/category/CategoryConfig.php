@@ -21,7 +21,7 @@ final class CategoryConfig{
 	public const NOT_ENOUGH_MONEY_MESSAGE = "not-enough-money-message";
 
 	/** @var mixed[] */
-	private static $properties = [];
+	private static array $properties = [];
 
 	public static function init(Loader $loader) : void{
 		$loader->saveResource("category.yml");
@@ -41,11 +41,7 @@ final class CategoryConfig{
 		return self::$properties[$property];
 	}
 
-	/**
-	 * @param string $property
-	 * @param mixed $value
-	 */
-	private static function setString(string $property, $value) : void{
+	private static function setString(string $property, mixed $value) : void{
 		if(!is_string($value)){
 			throw new InvalidArgumentException("Invalid value for property {$property} in category.yml");
 		}
@@ -57,11 +53,7 @@ final class CategoryConfig{
 		return self::$properties[$property];
 	}
 
-	/**
-	 * @param string $property
-	 * @param mixed $value
-	 */
-	private static function setBool(string $property, $value) : void{
+	private static function setBool(string $property, mixed $value) : void{
 		if(!is_bool($value)){
 			throw new InvalidArgumentException("Invalid value for property {$property} in category.yml");
 		}
@@ -77,11 +69,7 @@ final class CategoryConfig{
 		return self::$properties[$property];
 	}
 
-	/**
-	 * @param string $property
-	 * @param mixed $value
-	 */
-	private static function setStringList(string $property, $value) : void{
+	private static function setStringList(string $property, mixed $value) : void{
 		if(!is_array($value)){
 			throw new InvalidArgumentException("Invalid value for property {$property} in category.yml");
 		}
