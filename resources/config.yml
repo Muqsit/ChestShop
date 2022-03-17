@@ -33,6 +33,5 @@ economy:
     # issue at https://github.com/Muqsit/ChestShop/issues
     plugin: EconomyAPI
     # Extra configuration options if BedrockEconomy plugin is chosen
-    BedrockEconomy:
-        unsafe-warn: true
+    BedrockEconomy: []
 ...
