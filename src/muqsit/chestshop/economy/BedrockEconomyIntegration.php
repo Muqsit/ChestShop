@@ -17,12 +17,8 @@ final class BedrockEconomyIntegration implements EconomyIntegration{
 	private BedrockEconomy $plugin;
 
 	public function __construct(){
-		/** @var BedrockEconomy|null $plugin */
-		$plugin = Server::getInstance()->getPluginManager()->getPlugin("BedrockEconomy");
-		if($plugin === null){
-			throw new InvalidArgumentException("BedrockEconomy plugin was not found");
-		}
-
+		/** @var BedrockEconomy $plugin */
+		$plugin = Server::getInstance()->getPluginManager()->getPlugin("BedrockEconomy") ?? throw new InvalidArgumentException("BedrockEconomy plugin was not found");
 		$this->plugin = $plugin;
 	}
 

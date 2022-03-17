@@ -61,11 +61,7 @@ final class ChestShop{
 	}
 
 	public function removeCategory(string $name) : void{
-		if(!isset($this->categories[$name])){
-			throw new InvalidArgumentException("No category with the name {$name} exists.");
-		}
-
-		$category = $this->categories[$name];
+		$category = $this->categories[$name] ?? throw new InvalidArgumentException("No category with the name {$name} exists.");
 		unset($this->categories[$name]);
 
 		$inventory = $this->menu->getInventory();
@@ -82,11 +78,7 @@ final class ChestShop{
 	}
 
 	public function getCategory(string $name) : Category{
-		if(!isset($this->categories[$name])){
-			throw new InvalidArgumentException("No category with the name {$name} exists.");
-		}
-
-		return $this->categories[$name];
+		return $this->categories[$name] ?? throw new InvalidArgumentException("No category with the name {$name} exists.");
 	}
 
 	/**

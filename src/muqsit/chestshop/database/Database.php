@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace muqsit\chestshop\database;
 
 use Closure;
+use InvalidArgumentException;
 use muqsit\chestshop\category\Category;
 use muqsit\chestshop\category\CategoryEntry;
 use muqsit\chestshop\ChestShop;
@@ -24,7 +25,7 @@ final class Database{
 
 		$config = new Config($loader->getDataFolder() . "database.yml", Config::YAML);
 		if(strtolower($config->getNested("database.type")) === "mysql"){
-			throw new \InvalidArgumentException("{$loader->getName()} currently doesn't support MySQL.");
+			throw new InvalidArgumentException("{$loader->getName()} currently doesn't support MySQL.");
 		}
 
 		$this->connector = libasynql::create($loader, $config->get("database"), ["sqlite" => "db/sqlite.sql", "mysql" => "db/mysql.sql"]);
