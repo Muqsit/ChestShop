@@ -16,7 +16,10 @@ button:
 #   {CATEGORY| => Name of the category
 #   {PAGE} => Page number
 item-button:
-    name: "&r{NAME}"
+    # Name of the item, or "" to set no custom name
+    # Example usage:
+    # name: "&r&c-= {NAME} =-"
+    name: ""
     lore:
         # How to add this lore?
         #    unshift  => Adds the lore at the beginning of the item's
