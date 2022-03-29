@@ -17,6 +17,8 @@ button:
 #   {PAGE} => Page number
 item-button:
     # Name of the item, or "" to set no custom name
+    # You may want to set this to "" so the game displays item name
+    # based on the client's language.
     # Example usage:
     # name: "&r&c-= {NAME} =-"
     name: ""
