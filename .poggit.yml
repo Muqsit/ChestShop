@@ -7,7 +7,7 @@ projects:
     libs:
       - src: muqsit/InvMenu/InvMenu
         branch: pm5
-        version: ^4.6.1
+        version: ^4.6.3
       - src: dktapps-pm-pl/pmforms/pmforms
         version: ^2.0.0
       - src: poggit/libasynql/libasynql
