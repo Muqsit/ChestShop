@@ -48,7 +48,7 @@ final class Category{
 
 	public function addEntry(CategoryEntry $entry, bool $update = true) : void{
 		$page = $this->pages[count($this->pages) - 1] ?? null;
-		if($page === null){
+		if($page === null || $page->isFull()){
 			$page = new CategoryPage();
 			$page->init($this->database, $this);
 			$this->pages[] = $page;

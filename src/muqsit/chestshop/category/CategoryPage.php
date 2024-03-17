@@ -171,7 +171,7 @@ final class CategoryPage{
 	}
 
 	public function addEntry(CategoryEntry $entry, bool $update) : void{
-		if(count($this->entries) === self::MAX_ENTRIES_PER_PAGE){
+		if($this->isFull()){
 			throw new OverflowException("Cannot add more than " . self::MAX_ENTRIES_PER_PAGE . " entries to a page.");
 		}
 
@@ -209,6 +209,10 @@ final class CategoryPage{
 
 	public function isEmpty() : bool{
 		return count($this->entries) === 0;
+	}
+
+	public function isFull() : bool{
+		return count($this->entries) >= self::MAX_ENTRIES_PER_PAGE;
 	}
 
 	public function removeItem(Item $item) : bool{
